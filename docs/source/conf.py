@@ -20,7 +20,7 @@ import sys, os
 sys.path.insert(0, os.path.abspath('../..'))
 
 # Import project metadata
-from pyside_program_options import metadata
+from pyside_program_config import metadata
 
 # -- General configuration -----------------------------------------------------
 

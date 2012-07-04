@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# PySide Program Options setup script
+# PySide Program Config setup script
 
 import os
 from pyside_program_options import metadata

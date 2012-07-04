@@ -2,7 +2,7 @@
  Summary
 =========
 
-PySide Program Options provides an easy way for PySide_ programs to manage both
+PySide Program Config provides an easy way for PySide_ programs to manage both
 command-line arguments and stored settings to control program configuration. It
 does so by leveraging the excellent QSettings_ class and the standard Python
 argparse_ library.
