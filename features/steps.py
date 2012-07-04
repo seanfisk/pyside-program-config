@@ -1,6 +1,3 @@
-from pyside_program_config import (ProgramConfig,
-                                   RequiredKeyError,
-                                   DuplicateKeyError)
 from argparse import Namespace
 
 from nose.tools import assert_equals, assert_raises
@@ -27,6 +24,10 @@ def start_the_program(step):
     # mock is not used (such as in the duplicate key test) 
     with Mock() as world.mock_qsettings:
         pass
+    with Mock() as QSettings:
+        from PySide.QtCore import QSettings
+        QSettings() >> world.mock_qsettings
+    from pyside_program_config import ProgramConfig
     # inject the mocks
     world.program_config = ProgramConfig(arg_parser=world.mock_arg_parser,
                                          qsettings=world.mock_qsettings)
@@ -145,6 +146,7 @@ def validate_the_configuration_without_optional(step):
     
 @step('program fails to validate the configuration')
 def fails_to_validate_configuration(step):
+    from pyside_program_config import RequiredKeyError
     with world.mock_arg_parser as mock_arg_parser:
         namespace = Namespace(**{world.key: None})
         mock_arg_parser.parse_args([]) >> namespace
@@ -158,4 +160,5 @@ def config_is_available(step):
     
 @step('cannot require the key again')
 def cannot_require_key_again(step):
+    from pyside_program_config import DuplicateKeyError
     assert_raises(DuplicateKeyError, world.program_config.add_required, world.key, world.type, 'random help string')
