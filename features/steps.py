@@ -34,20 +34,22 @@ def require_the_key(step):
     with world.mock_arg_parser as mock_arg_parser:
         mock_arg_parser.add_argument('--' + world.key,
                                      metavar=world.key.upper(),
-                                     type=world.type,
-                                     help='random help string')
-    world.program_config.add_required(world.key, world.type,
-                                      'random help string')
+                                     help='random help string',
+                                     type=world.type)
+    world.program_config.add_required(world.key,
+                                      'random help string',
+                                      world.type)
 
 @step('I require the key with a default value')
 def require_the_key_with_default_value(step):
     with world.mock_arg_parser as mock_arg_parser:
         mock_arg_parser.add_argument('--' + world.key,
                                 metavar=world.key.upper(),
-                                type=world.type,
-                                help='random help string')
-    world.program_config.add_required_with_default(world.key, world.type,
+                                help='random help string',
+                                type=world.type)
+    world.program_config.add_required_with_default(world.key,
                                                    'random help string',
+                                                   world.type,
                                                    world.value)
 
 @step('I require the key with a callback')
@@ -55,16 +57,18 @@ def require_the_key_with_callback(step):
     with world.mock_arg_parser as mock_arg_parser:
         mock_arg_parser.add_argument('--' + world.key,
                                      metavar=world.key.upper(),
-                                     type=world.type,
-                                     help='random help string')    
-    def callback(key, type, help):
+                                     help='random help string',    
+                                     type=world.type)
+    def callback(key, help, type):
         assert_equals(world.key, key)
-        assert_equals(world.type, type)
         assert_equals('random help string', help)
+        assert_equals(world.type, type)
         return world.value
         
-    world.program_config.add_required_with_callback(world.key, world.type,
-                                      'random help string', callback)
+    world.program_config.add_required_with_callback(world.key,
+                                                    'random help string',
+                                                    world.type,
+                                                    callback)
     
 @step('I validate the configuration with command-line options')
 def validate_configuration_with_command_line_options(step):
@@ -83,8 +87,10 @@ def key_and_value_have_been_previously_saved(step):
         mock_qsettings.setValue(world.key, world.type(world.value))
         mock_qsettings.contains(world.key) >> True
         mock_qsettings.value(world.key) >> world.value
-    world.program_config.set(world.key, world.value, world.type,
-                             'random help string')
+    world.program_config.set(world.key,
+                             world.value,
+                             'random help string',
+                             world.type)
 
 @step('I validate the configuration with the previously saved values')
 def validate_the_configuration_with_previously_saved_values(step):
@@ -125,10 +131,11 @@ def specify_key_as_optional(step):
     with world.mock_arg_parser as mock_arg_parser:
         mock_arg_parser.add_argument('--' + world.key,
                                      metavar=world.key.upper(),
-                                     type=world.type,
-                                     help='random help string')
-    world.program_config.add_optional(world.key, world.type,
-                                      'random help string')
+                                     help='random help string',
+                                     type=world.type)
+    world.program_config.add_optional(world.key,
+                                      'random help string',
+                                      world.type)
     
 @step('validate the configuration without the optional configuration provided')
 def validate_the_configuration_without_optional(step):
@@ -158,4 +165,8 @@ def config_is_available(step):
 @step('cannot require the key again')
 def cannot_require_key_again(step):
     from pyside_program_config import DuplicateKeyError
-    assert_raises(DuplicateKeyError, world.program_config.add_required, world.key, world.type, 'random help string')
+    assert_raises(DuplicateKeyError,
+                  world.program_config.add_required,
+                  world.key,
+                  'random help string',
+                  world.type)

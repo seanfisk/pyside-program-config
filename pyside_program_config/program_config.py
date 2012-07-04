@@ -12,7 +12,7 @@ class DuplicateKeyError(Exception):
         return 'Attempt to define duplicate key: {0}'.format(self.key)
     
 class KeyInfo(object):
-    def __init__(self, is_required, type, help):
+    def __init__(self, is_required, help, type):
         self.is_required = is_required
         self.type = type
         self.help = help
@@ -38,31 +38,31 @@ class ProgramConfig(object):
         # similar story here
         self._callbacks = {}
     
-    def _add_key(self, key, is_required, type, help):
+    def _add_key(self, key, is_required, help, type):
         if key in self._key_info:
             raise DuplicateKeyError(key)
-        self._key_info[key] = KeyInfo(is_required, type, help)
+        self._key_info[key] = KeyInfo(is_required, help, type)
         self._arg_parser.add_argument('--' + key,
                                       metavar=key.upper(),
-                                      type=type,
-                                      help=help)
+                                      help=help,
+                                      type=type)
     
-    def add_required(self, key, type, help):
-        self._add_key(key, True, type, help)
+    def add_required(self, key, help, type):
+        self._add_key(key, True, help, type)
         
-    def add_optional(self, key, type, help):
-        self._add_key(key, False, type, help)
+    def add_optional(self, key, help, type):
+        self._add_key(key, False, help, type)
     
-    def add_required_with_callback(self, key, type, help, callback):
-        self.add_required(key, type, help)
+    def add_required_with_callback(self, key, help, type, callback):
+        self.add_required(key, help, type)
         self._callbacks[key] = callback
     
-    def add_required_with_default(self, key, type, help, default):
-        self.add_required(key, type, help)
+    def add_required_with_default(self, key, help, type, default):
+        self.add_required(key, help, type)
         self._defaults[key] = default
         
-    def set(self, key, value, type, help):
-        self._key_info[key] = KeyInfo(True, type, help)
+    def set(self, key, value, help, type):
+        self._key_info[key] = KeyInfo(True, help, type)
         self._qsettings.setValue(key, value)
         
     def validate(self, args=[]):
@@ -85,7 +85,7 @@ class ProgramConfig(object):
                         value = self._defaults[key]
                     except KeyError:
                         try:
-                            value = self._callbacks[key](key, info.type, info.help)
+                            value = self._callbacks[key](key, info.help, info.type)
                         except KeyError:
                             if info.is_required:
                                 raise RequiredKeyError(key)
