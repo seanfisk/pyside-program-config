@@ -1,6 +1,3 @@
-from argparse import ArgumentParser
-from PySide.QtCore import QSettings
-
 class RequiredKeyError(Exception):
     def __init__(self, key):
         self.key = key
@@ -21,7 +18,18 @@ class KeyInfo(object):
         self.help = help
 
 class ProgramConfig(object):
-    def __init__(self, arg_parser=ArgumentParser(), qsettings=QSettings()):
+    def __init__(self, arg_parser=None, qsettings=None):
+        
+        # this is not the best technique, but it allows ease of use without
+        # creating explicit dependencies on ArgumentParser and QSettings,
+        # and makes this module more easily testable 
+        if arg_parser is None:
+            from argparse import ArgumentParser
+            arg_parser = ArgumentParser()
+        if qsettings is None:
+            from PySide.QtCore import QSettings
+            qsettings = QSettings()
+            
         self._arg_parser = arg_parser
         self._qsettings = qsettings
         self._key_info = {}
