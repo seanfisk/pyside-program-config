@@ -1,8 +1,7 @@
 from pyside_program_config import (ProgramConfig,
                                    RequiredKeyError,
                                    DuplicateKeyError)
-from argparse import ArgumentParser, Namespace
-from PySide.QtCore import QSettings
+from argparse import Namespace
 
 from nose.tools import assert_equals, assert_raises
 from lettuce import world, step
