@@ -38,31 +38,31 @@ class ProgramConfig(object):
         # similar story here
         self._callbacks = {}
     
-    def _add_key(self, key, is_required, the_type, the_help):
+    def _add_key(self, key, is_required, type, help):
         if key in self._key_info:
             raise DuplicateKeyError(key)
-        self._key_info[key] = KeyInfo(is_required, the_type, the_help)
+        self._key_info[key] = KeyInfo(is_required, type, help)
         self._arg_parser.add_argument('--' + key,
                                       metavar=key.upper(),
-                                      type=the_type,
-                                      help=the_help)
+                                      type=type,
+                                      help=help)
     
-    def add_required(self, key, the_type, the_help):
-        self._add_key(key, True, the_type, the_help)
+    def add_required(self, key, type, help):
+        self._add_key(key, True, type, help)
         
-    def add_optional(self, key, the_type, the_help):
-        self._add_key(key, False, the_type, the_help)
+    def add_optional(self, key, type, help):
+        self._add_key(key, False, type, help)
     
-    def add_required_with_callback(self, key, the_type, the_help, callback):
-        self.add_required(key, the_type, the_help)
+    def add_required_with_callback(self, key, type, help, callback):
+        self.add_required(key, type, help)
         self._callbacks[key] = callback
     
-    def add_required_with_default(self, key, the_type, the_help, default):
-        self.add_required(key, the_type, the_help)
+    def add_required_with_default(self, key, type, help, default):
+        self.add_required(key, type, help)
         self._defaults[key] = default
         
-    def set(self, key, value, the_type, the_help):
-        self._key_info[key] = KeyInfo(True, the_type, the_help)
+    def set(self, key, value, type, help):
+        self._key_info[key] = KeyInfo(True, type, help)
         self._qsettings.setValue(key, value)
         
     def validate(self, args=[]):

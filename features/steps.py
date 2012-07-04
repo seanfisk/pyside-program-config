@@ -10,8 +10,8 @@ def key(step, key):
     world.key = key
     
 @step('my type is (.+)')
-def type_is(step, the_type):
-    world.type = eval(the_type)
+def type_is(step, type):
+    world.type = eval(type)
     
 @step('my value is (.+)')
 def value(step, value):
@@ -57,10 +57,10 @@ def require_the_key_with_callback(step):
                                      metavar=world.key.upper(),
                                      type=world.type,
                                      help='random help string')    
-    def callback(key, the_type, the_help):
+    def callback(key, type, help):
         assert_equals(world.key, key)
-        assert_equals(world.type, the_type)
-        assert_equals('random help string', the_help)
+        assert_equals(world.type, type)
+        assert_equals('random help string', help)
         return world.value
         
     world.program_config.add_required_with_callback(world.key, world.type,
