@@ -3,3 +3,4 @@ python:
   - "2.6"
   - "2.7"
 script: lettuce
+install: pip install -r requirements/test.txt --use-mirrors

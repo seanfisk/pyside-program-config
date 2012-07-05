@@ -1,0 +1,8 @@
+# include requirements for use
+-r use.txt
+
+# requirements for testing
+lettuce
+nose
+ludibrio
+ordereddict

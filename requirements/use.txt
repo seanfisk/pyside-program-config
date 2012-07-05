@@ -1,0 +1,5 @@
+# requirements for using the library
+
+# argument parsing (in Python standard library >= 2.7)
+argparse
+
