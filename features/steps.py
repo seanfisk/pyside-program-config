@@ -1,7 +1,7 @@
 from pyside_program_config import ProgramConfig
 from argparse import Namespace
 
-from nose.tools import assert_equals, assert_raises
+from nose.tools import assert_equals, assert_raises, assert_is_none
 from lettuce import world, step
 from ludibrio import Mock
 
@@ -176,3 +176,31 @@ def cannot_set_the_key(step):
                   world.program_config.set,
                   world.key,
                   world.value)
+    
+@step('I require two keys')
+def require_two_keys(step):
+    for key in ['key1', 'key2']:
+        with world.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.add_argument('--' + key,
+                                         metavar=key.upper())
+            world.program_config.add_required(key)
+    
+@step('the first key is not persisted '
+      'upon validation with an invalid second key')
+def attempt_to_validate_with_invalid_second_key(step):
+    with world.mock_arg_parser as mock_arg_parser:
+        namespace = Namespace(**{'key1': 'value1',
+                                 'key2': None})
+        mock_arg_parser.parse_args([]) >> namespace
+    with world.mock_qsettings as mock_qsettings:
+        mock_qsettings.contains('key2') >> False
+    # monkey-patch to ensure an order
+    try:
+        from collections import OrderedDict
+    except ImportError:
+        from ordereddict import OrderedDict
+    world.program_config._key_info = \
+        OrderedDict(sorted(world.program_config._key_info.items()))
+                
+    from pyside_program_config import RequiredKeyError
+    assert_raises(RequiredKeyError, world.program_config.validate)

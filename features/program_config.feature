@@ -122,3 +122,7 @@ Feature: Save and persist configuration
       | lines     | 20              | int  |
       | name      | Program Options | str  |
       | debug     | True            | bool |
+      
+  Scenario Outline: Save to persistent storage is atomic
+    Given I require two keys
+    Then the first key is not persisted upon validation with an invalid second key

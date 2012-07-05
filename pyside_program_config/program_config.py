@@ -85,21 +85,25 @@ class ProgramConfig(object):
             # command-line
             if parsed_args[key]: 
                 value = parsed_args[key]
+            elif self._qsettings.contains(key):                    
+                value = info.type(self._qsettings.value(key))
             else:
-                if self._qsettings.contains(key):                    
-                    value = info.type(self._qsettings.value(key))
-                else:
+                try:
+                    value = self._defaults[key]
+                except KeyError:
                     try:
-                        value = self._defaults[key]
+                        value = self._callbacks[key](key,
+                                                     info.help,
+                                                     info.type)
                     except KeyError:
-                        try:
-                            value = self._callbacks[key](key, info.help, info.type)
-                        except KeyError:
-                            if info.is_required:
-                                raise RequiredKeyError(key)
-                            else:
-                                continue
+                        if info.is_required:
+                            raise RequiredKeyError(key)
+                        else:
+                            continue
             config[key] = value
+            
+        # once all are verified, commit all to QSettings
+        for key, value in config.iteritems():
             self._qsettings.setValue(key, value)
             
         # ensure settings are written
