@@ -37,8 +37,8 @@ def require_the_key(step):
                                      help='random help string',
                                      type=world.type)
     world.program_config.add_required(world.key,
-                                      'random help string',
-                                      world.type)
+                                      help='random help string',
+                                      type=world.type)
 
 @step('I require the key with a default value')
 def require_the_key_with_default_value(step):
@@ -49,8 +49,8 @@ def require_the_key_with_default_value(step):
                                 type=world.type)
     world.program_config.add_required_with_default(world.key,
                                                    world.value,
-                                                   'random help string',
-                                                   world.type)
+                                                   help='random help string',
+                                                   type=world.type)
 
 @step('I require the key with a callback')
 def require_the_key_with_callback(step):
@@ -67,8 +67,8 @@ def require_the_key_with_callback(step):
         
     world.program_config.add_required_with_callback(world.key,
                                                     callback,
-                                                    'random help string',
-                                                    world.type)
+                                                    help='random help string',
+                                                    type=world.type)
     
 @step('I validate the configuration with command-line options')
 def validate_configuration_with_command_line_options(step):
@@ -89,8 +89,8 @@ def key_and_value_have_been_previously_saved(step):
         mock_qsettings.value(world.key) >> world.value
     world.program_config.set(world.key,
                              world.value,
-                             'random help string',
-                             world.type)
+                             help='random help string',
+                             type=world.type)
 
 @step('I validate the configuration with the previously saved values')
 def validate_the_configuration_with_previously_saved_values(step):
@@ -134,8 +134,8 @@ def specify_key_as_optional(step):
                                      help='random help string',
                                      type=world.type)
     world.program_config.add_optional(world.key,
-                                      'random help string',
-                                      world.type)
+                                      help='random help string',
+                                      type=world.type)
     
 @step('validate the configuration without the optional configuration provided')
 def validate_the_configuration_without_optional(step):
@@ -168,5 +168,5 @@ def cannot_require_key_again(step):
     assert_raises(DuplicateKeyError,
                   world.program_config.add_required,
                   world.key,
-                  'random help string',
-                  world.type)
+                  help='random help string',
+                  type=world.type)
