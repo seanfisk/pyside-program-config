@@ -7,4 +7,7 @@ __author__ = metadata.authors[0]
 __license__ = metadata.license
 __copyright__ = metadata.copyright
 
-from program_config import ProgramConfig, RequiredKeyError, DuplicateKeyError
+from program_config import (ProgramConfig,
+                            RequiredKeyError,
+                            DuplicateKeyError,
+                            KeyNotRequiredError)

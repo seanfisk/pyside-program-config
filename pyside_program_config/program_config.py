@@ -16,6 +16,13 @@ class KeyInfo(object):
         self.is_required = is_required
         self.type = type
         self.help = help
+        
+class KeyNotRequiredError(Exception):
+    def __init__(self, key):
+        self.key = key
+    def __str__(self):
+        return ('Attempted to set key which has not been specified as required'
+                'or optional:').format(self.key)
 
 class ProgramConfig(object):
     def __init__(self, arg_parser=None, qsettings=None):
@@ -61,8 +68,9 @@ class ProgramConfig(object):
         self.add_required(key, help, type)
         self._defaults[key] = default
         
-    def set(self, key, value, help=None, type=str):
-        self._key_info[key] = KeyInfo(True, help, type)
+    def set(self, key, value):
+        if key not in self._key_info:
+            raise KeyNotRequiredError(key)
         self._qsettings.setValue(key, value)
         
     def validate(self, args=[]):

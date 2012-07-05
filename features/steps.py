@@ -19,10 +19,10 @@ def value(step, value):
     
 @step('I start the program')
 def start_the_program(step):
-    # simple way to create a mock with no expectations (yet)
-    world.mock_arg_parser = Mock()
     # using the empty with like this prevents ludibrio from complaining if the
-    # mock is not used (such as in the duplicate key test) 
+    # mock is not used (such as in the duplicate key test)
+    with Mock() as world.mock_arg_parser:
+        pass 
     with Mock() as world.mock_qsettings:
         pass
     # inject the mocks
@@ -88,10 +88,8 @@ def key_and_value_have_been_previously_saved(step):
         mock_qsettings.contains(world.key) >> True
         mock_qsettings.value(world.key) >> world.value
     world.program_config.set(world.key,
-                             world.value,
-                             help='random help string',
-                             type=world.type)
-
+                             world.value)
+    
 @step('I validate the configuration with the previously saved values')
 def validate_the_configuration_with_previously_saved_values(step):
     with world.mock_arg_parser as mock_arg_parser:
@@ -170,3 +168,11 @@ def cannot_require_key_again(step):
                   world.key,
                   help='random help string',
                   type=world.type)
+    
+@step('cannot set the key')
+def cannot_set_the_key(step):
+    from pyside_program_config import KeyNotRequiredError
+    assert_raises(KeyNotRequiredError,
+                  world.program_config.set,
+                  world.key,
+                  world.value)

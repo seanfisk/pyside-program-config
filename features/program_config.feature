@@ -109,3 +109,16 @@ Feature: Save and persist configuration
       | lines     | int  |
       | name      | str  |
       | debug     | bool |
+      
+  Scenario Outline: Attempt to set key that has not been required
+    Given my key is <key>
+    And my type is <type>
+    When I start the program
+    Then I cannot set the key
+
+    Examples:    
+      | key       | value           | type |
+      | verbosity | 10              | int  |
+      | lines     | 20              | int  |
+      | name      | Program Options | str  |
+      | debug     | True            | bool |
