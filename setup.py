@@ -3,7 +3,7 @@
 # PySide Program Config setup script
 
 import os
-from pyside_program_options import metadata
+from pyside_program_config import metadata
 
 # auto-install and download distribute
 import distribute_setup
