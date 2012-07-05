@@ -48,9 +48,9 @@ def require_the_key_with_default_value(step):
                                 help='random help string',
                                 type=world.type)
     world.program_config.add_required_with_default(world.key,
+                                                   world.value,
                                                    'random help string',
-                                                   world.type,
-                                                   world.value)
+                                                   world.type)
 
 @step('I require the key with a callback')
 def require_the_key_with_callback(step):
@@ -66,9 +66,9 @@ def require_the_key_with_callback(step):
         return world.value
         
     world.program_config.add_required_with_callback(world.key,
+                                                    callback,
                                                     'random help string',
-                                                    world.type,
-                                                    callback)
+                                                    world.type)
     
 @step('I validate the configuration with command-line options')
 def validate_configuration_with_command_line_options(step):

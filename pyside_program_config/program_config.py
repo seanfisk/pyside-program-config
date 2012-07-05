@@ -47,21 +47,21 @@ class ProgramConfig(object):
                                       help=help,
                                       type=type)
     
-    def add_required(self, key, help, type):
+    def add_required(self, key, help=None, type=str):
         self._add_key(key, True, help, type)
         
-    def add_optional(self, key, help, type):
+    def add_optional(self, key, help=None, type=str):
         self._add_key(key, False, help, type)
     
-    def add_required_with_callback(self, key, help, type, callback):
+    def add_required_with_callback(self, key, callback, help=None, type=str):
         self.add_required(key, help, type)
         self._callbacks[key] = callback
     
-    def add_required_with_default(self, key, help, type, default):
+    def add_required_with_default(self, key, default, help=None, type=str):
         self.add_required(key, help, type)
         self._defaults[key] = default
         
-    def set(self, key, value, help, type):
+    def set(self, key, value, help=None, type=str):
         self._key_info[key] = KeyInfo(True, help, type)
         self._qsettings.setValue(key, value)
         
