@@ -12,10 +12,11 @@ class DuplicateKeyError(Exception):
         return 'Attempt to define duplicate key: {0}'.format(self.key)
     
 class KeyInfo(object):
-    def __init__(self, is_required, help, type):
+    def __init__(self, is_required, help, type, is_persistent):
         self.is_required = is_required
         self.type = type
         self.help = help
+        self.is_persistent = is_persistent
         
 class KeyNotRequiredError(Exception):
     def __init__(self, key):
@@ -26,7 +27,6 @@ class KeyNotRequiredError(Exception):
 
 class ProgramConfig(object):
     def __init__(self, arg_parser=None, qsettings=None):
-        
         # this is not the best technique, but it allows ease of use without
         # creating explicit dependencies on ArgumentParser and QSettings,
         # and makes this module more easily testable 
@@ -45,27 +45,29 @@ class ProgramConfig(object):
         # similar story here
         self._callbacks = {}
     
-    def _add_key(self, key, is_required, help, type):
+    def _add_key(self, key, is_required, help, type, is_persistent):
         if key in self._key_info:
             raise DuplicateKeyError(key)
-        self._key_info[key] = KeyInfo(is_required, help, type)
+        self._key_info[key] = KeyInfo(is_required, help, type, is_persistent)
         self._arg_parser.add_argument('--' + key,
                                       metavar=key.upper(),
                                       help=help,
                                       type=type)
     
-    def add_required(self, key, help=None, type=str):
-        self._add_key(key, True, help, type)
+    def add_required(self, key, help=None, type=str, is_persistent=True):
+        self._add_key(key, True, help, type, is_persistent)
         
-    def add_optional(self, key, help=None, type=str):
-        self._add_key(key, False, help, type)
+    def add_optional(self, key, help=None, type=str, is_persistent=True):
+        self._add_key(key, False, help, type, is_persistent)
     
-    def add_required_with_callback(self, key, callback, help=None, type=str):
-        self.add_required(key, help, type)
+    def add_required_with_callback(self, key, callback, help=None, type=str,
+                                   is_persistent=True):
+        self.add_required(key, help, type, True)
         self._callbacks[key] = callback
     
-    def add_required_with_default(self, key, default, help=None, type=str):
-        self.add_required(key, help, type)
+    def add_required_with_default(self, key, default, help=None, type=str,
+                                  is_persistent=True):
+        self.add_required(key, help, type, is_persistent)
         self._defaults[key] = default
         
     def set(self, key, value):
@@ -104,7 +106,8 @@ class ProgramConfig(object):
             
         # once all are verified, commit all to QSettings
         for key, value in config.iteritems():
-            self._qsettings.setValue(key, value)
+            if self._key_info[key].is_persistent:
+                self._qsettings.setValue(key, value)
             
         # ensure settings are written
         self._qsettings.sync()

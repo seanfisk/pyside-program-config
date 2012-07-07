@@ -8,8 +8,8 @@ Feature: Save and persist configuration
     And my type is <type>
     And my value is <value>
     When I start the program
-    And I require the key
-    And I validate the configuration with command-line options
+    And I require the key with no fallback
+    And I validate the configuration with command-line options with persistence
     Then my configuration is available
 
     Examples:
@@ -24,7 +24,7 @@ Feature: Save and persist configuration
     And my type is <type>
     And my value is <value>
     When I start the program
-    And I require the key
+    And I require the key with no fallback
     And my key and value have been previously saved
     And I validate the configuration with the previously saved values
     Then my configuration is available
@@ -72,7 +72,7 @@ Feature: Save and persist configuration
     Given my key is <key>
     And my type is <type>
     When I start the program
-    And I require the key
+    And I require the key with no fallback
     Then the program fails to validate the configuration
 
     Examples:
@@ -100,7 +100,7 @@ Feature: Save and persist configuration
     Given my key is <key>
     And my type is <type>
     When I start the program
-    And I require the key
+    And I require the key with no fallback
     Then I cannot require the key again
         
     Examples:
@@ -126,3 +126,19 @@ Feature: Save and persist configuration
   Scenario Outline: Save to persistent storage is atomic
     Given I require two keys
     Then the first key is not persisted upon validation with an invalid second key
+    
+  Scenario Outline: Required non-persistent configuration specified on the command-line
+    Given my key is <key>
+    And my type is <type>
+    And my value is <value>
+    When I start the program
+    And I require the key without persistence
+    And I validate the configuration with command-line options without persistence
+    Then my configuration is available
+
+    Examples:    
+      | key       | value           | type |
+      | verbosity | 10              | int  |
+      | lines     | 20              | int  |
+      | name      | Program Options | str  |
+      | debug     | True            | bool |

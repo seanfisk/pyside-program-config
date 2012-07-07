@@ -5,6 +5,9 @@ from nose.tools import assert_equals, assert_raises, assert_is_none
 from lettuce import world, step
 from ludibrio import Mock
 
+# note to self
+# DON'T CREATE A STEP SENTENCE WHICH IS A SUBSTRING OF ANOTHER STEP SENTENCE!
+
 @step('my key is (.+)')
 def key(step, key):
     world.key = key
@@ -29,7 +32,7 @@ def start_the_program(step):
     world.program_config = ProgramConfig(arg_parser=world.mock_arg_parser,
                                          qsettings=world.mock_qsettings)
     
-@step('I require the key')
+@step('I require the key with no fallback')
 def require_the_key(step):
     with world.mock_arg_parser as mock_arg_parser:
         mock_arg_parser.add_argument('--' + world.key,
@@ -59,22 +62,36 @@ def require_the_key_with_callback(step):
                                      metavar=world.key.upper(),
                                      help='random help string',    
                                      type=world.type)
+        
     def callback(key, help, type):
         assert_equals(world.key, key)
         assert_equals('random help string', help)
         assert_equals(world.type, type)
         return world.value
-        
+    
     world.program_config.add_required_with_callback(world.key,
                                                     callback,
                                                     help='random help string',
                                                     type=world.type)
+
+@step('I require the key without persistence')
+def frequire_the_key_without_persistence(step):
+    with world.mock_arg_parser as mock_arg_parser:
+        mock_arg_parser.add_argument('--' + world.key,
+                                     metavar=world.key.upper(),
+                                     help='random help string',
+                                     type=world.type)
+    world.program_config.add_required(world.key,
+                                      help='random help string',
+                                      type=world.type,
+                                      is_persistent=False)
     
-@step('I validate the configuration with command-line options')
+@step('I validate the configuration with command-line options with persistence')
 def validate_configuration_with_command_line_options(step):
     with world.mock_arg_parser as mock_arg_parser:
         namespace = Namespace(**{world.key: world.value})
-        mock_arg_parser.parse_args(['--' + world.key, str(world.value)]) >> namespace
+        mock_arg_parser.parse_args(['--' + world.key, str(world.value)]) \
+            >> namespace
     with world.mock_qsettings as mock_qsettings:
         mock_qsettings.setValue(world.key, world.value)
         mock_qsettings.sync()
@@ -123,6 +140,18 @@ def validate_the_configuration_with_callback(step):
         mock_qsettings.setValue(world.key, world.value)
         mock_qsettings.sync()
     world.config = world.program_config.validate()
+    
+@step('I validate the configuration with command-line '
+      'options without persistence')
+def validate_configuration_with_command_line_options_without_persistence(step):
+    with world.mock_arg_parser as mock_arg_parser:
+        namespace = Namespace(**{world.key: world.value})
+        mock_arg_parser.parse_args(['--' + world.key, str(world.value)]) \
+            >> namespace
+    with world.mock_qsettings as mock_qsettings:
+        mock_qsettings.sync()
+    world.config = world.program_config.validate(['--' + world.key,
+                                                  str(world.value)])
 
 @step('specify the key as optional')
 def specify_key_as_optional(step):
