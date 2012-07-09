@@ -60,7 +60,7 @@ class ProgramConfig(object):
     
     def add_required_with_callback(self, key, callback, help=None, type=str,
                                    is_persistent=True):
-        self.add_required(key, help, type, True)
+        self.add_required(key, help, type, is_persistent)
         self._callbacks[key] = callback
     
     def add_required_with_default(self, key, default, help=None, type=str,
