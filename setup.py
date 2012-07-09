@@ -21,6 +21,7 @@ def read(fname):
 
 install_requirements = [
     'argparse',
+    'ordereddict'
 ]
 
 # see here for more options:
