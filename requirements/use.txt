@@ -3,3 +3,5 @@
 # argument parsing (in Python standard library >= 2.7)
 argparse
 
+# OrderedDict fallback (in Python standard library >= 2.7)
+ordereddict
