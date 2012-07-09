@@ -9,5 +9,4 @@ __copyright__ = metadata.copyright
 
 from program_config import (ProgramConfig,
                             RequiredKeyError,
-                            DuplicateKeyError,
-                            KeyNotRequiredError)
+                            DuplicateKeyError)

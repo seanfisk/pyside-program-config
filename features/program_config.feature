@@ -3,142 +3,61 @@ Feature: Save and persist configuration
   As a program user
   I want to be able configure the program and have my changes persist between runs
 
-  Scenario Outline: Required configuration specified on command line
-    Given my key is <key>
-    And my type is <type>
-    And my value is <value>
-    When I start the program
-    And I require the key with no fallback
-    And I validate the configuration with command-line options with persistence
+  Scenario: Required configuration specified on command line
+    Given I have an example configuration
+    And I require the configuration with no fallback
+    When I validate the configuration with command-line options with persistence
     Then my configuration is available
-
-    Examples:
-      | key       | value           | type |
-      | verbosity | 10              | int  |
-      | lines     | 20              | int  |
-      | name      | Program Options | str  |
-      | debug     | True            | bool |
       
-  Scenario Outline: Required configuration previously saved
-    Given my key is <key>
-    And my type is <type>
-    And my value is <value>
-    When I start the program
-    And I require the key with no fallback
-    And my key and value have been previously saved
-    And I validate the configuration with the previously saved values
+  Scenario: Required configuration previously saved
+    Given I have an example configuration
+    And I require the configuration with no fallback
+    When I validate the configuration with a previously saved configuration
     Then my configuration is available
     
-    Examples:
-      | key       | value           | type |
-      | verbosity | 10              | int  |
-      | lines     | 20              | int  |
-      | name      | Program Options | str  |
-      | debug     | True            | bool |
-      
-  Scenario Outline: Required configuration has default value
-    Given my key is <key>
-    And my type is <type>
-    Given my value is <value>
-    When I start the program
-    And I require the key with a default value
-    And I validate the configuration with the default values
+  Scenario: Required configuration has default value
+    Given I have an example configuration
+    And I require the configuration with default values
+    When I validate the configuration without command-line options without persistence
     Then my configuration is available
             
-    Examples:
-      | key       | value           | type |
-      | verbosity | 10              | int  |
-      | lines     | 20              | int  |
-      | name      | Program Options | str  |
-      | debug     | True            | bool |
-
-  Scenario Outline: Required configuration has callback
-    Given my key is <key>
-    And my type is <type>
-    And my value is <value>
-    When I start the program
-    And I require the key with a callback
-    And I validate the configuration with the callback
+  Scenario: Required configuration has callback
+    Given I have the configuration:
+      | key       | value | help                     | type | is_persistent | 
+      | verbosity | 3     | how much output to print | int  | False         |
+    And I require the configuration with a callback
+    When I validate the configuration without command-line options with persistence
     Then my configuration is available
 
-    Examples:    
-      | key       | value           | type |
-      | verbosity | 10              | int  |
-      | lines     | 20              | int  |
-      | name      | Program Options | str  |
-      | debug     | True            | bool |
-      
-  Scenario Outline: Required configuration with no default or callback
-    Given my key is <key>
-    And my type is <type>
-    When I start the program
-    And I require the key with no fallback
+  Scenario: Required configuration with no default or callback
+    Given I have an example configuration
+    And I require the configuration with no fallback
     Then the program fails to validate the configuration
-
-    Examples:
-      | key       | type |
-      | verbosity | int  |
-      | lines     | int  |
-      | name      | str  |
-      | debug     | bool |
       
-  Scenario Outline: Optional configuration
-    Given my key is <key>
-    And my type is <type>
-    When I start the program
-    And I specify the key as optional
-    Then I validate the configuration without the optional configuration provided
-
-    Examples:
-      | key       | type |
-      | verbosity | int  |
-      | lines     | int  |
-      | name      | str  |
-      | debug     | bool |
+  Scenario: Optional configuration
+    Given I have an example configuration
+    And I specify the configuration as optional
+    Then I validate the configuration without command-line options without persistence
       
-  Scenario Outline: Attempt to add duplicate key
-    Given my key is <key>
-    And my type is <type>
-    When I start the program
-    And I require the key with no fallback
-    Then I cannot require the key again
-        
-    Examples:
-      | key       | type |
-      | verbosity | int  |
-      | lines     | int  |
-      | name      | str  |
-      | debug     | bool |
+  Scenario: Attempt to add duplicate configuration
+    Given I have an example configuration
+    And I require the configuration with no fallback
+    Then I cannot require the configuration again
       
-  Scenario Outline: Attempt to set key that has not been required
-    Given my key is <key>
-    And my type is <type>
-    When I start the program
-    Then I cannot set the key
-
-    Examples:    
-      | key       | value           | type |
-      | verbosity | 10              | int  |
-      | lines     | 20              | int  |
-      | name      | Program Options | str  |
-      | debug     | True            | bool |
-      
-  Scenario Outline: Save to persistent storage is atomic
-    Given I require two keys
-    Then the first key is not persisted upon validation with an invalid second key
+#  Scenario: Attempt to set configuration that has not been required
+#    Given I have an example configuration
+#    Then I cannot set the configuration
     
-  Scenario Outline: Required non-persistent configuration specified on the command-line
-    Given my key is <key>
-    And my type is <type>
-    And my value is <value>
-    When I start the program
-    And I require the key without persistence
-    And I validate the configuration with command-line options without persistence
-    Then my configuration is available
-
-    Examples:    
-      | key       | value           | type |
-      | verbosity | 10              | int  |
-      | lines     | 20              | int  |
-      | name      | Program Options | str  |
-      | debug     | True            | bool |
+  Scenario: Default configuration is never persisted
+    Given I have the configuration:
+      | key       | value | help                     | type | is_persistent | 
+      | verbosity | 3     | how much output to print | int  | True          |
+    And I require the configuration with default values
+    Then I validate the configuration without command-line options without persistence
+    
+  Scenario: Default configuration on the command line is not persisted
+    Given I have the configuration:
+      | key       | value | help                     | type | is_persistent | 
+      | verbosity | 3     | how much output to print | int  | True          |
+    And I require the configuration with default values
+    Then I validate the configuration with command-line options without persistence

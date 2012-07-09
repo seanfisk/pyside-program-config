@@ -1,9 +1,13 @@
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
 class RequiredKeyError(Exception):
     def __init__(self, key):
         self.key = key
     def __str__(self):
         return 'Required key not provided: {0}'.format(self.key)
-
 
 class DuplicateKeyError(Exception):
     def __init__(self, key):
@@ -18,12 +22,12 @@ class KeyInfo(object):
         self.help = help
         self.is_persistent = is_persistent
         
-class KeyNotRequiredError(Exception):
-    def __init__(self, key):
-        self.key = key
-    def __str__(self):
-        return ('Attempted to set key which has not been specified as required'
-                'or optional:').format(self.key)
+#class KeyNotRequiredError(Exception):
+#    def __init__(self, key):
+#        self.key = key
+#    def __str__(self):
+#        return ('Attempted to set key which has not been specified as required'
+#                'or optional:').format(self.key)
 
 class ProgramConfig(object):
     def __init__(self, arg_parser=None, qsettings=None):
@@ -39,7 +43,8 @@ class ProgramConfig(object):
             
         self._arg_parser = arg_parser
         self._qsettings = qsettings
-        self._key_info = {}
+        # make this ordered so they are validated in order of insertion
+        self._key_info = OrderedDict()
         # store defaults in a separate dictionary so we can have None defaults
         self._defaults = {}
         # similar story here
@@ -70,14 +75,17 @@ class ProgramConfig(object):
         self.add_required(key, help, type, is_persistent)
         self._defaults[key] = default
         
-    def set(self, key, value):
-        if key not in self._key_info:
-            raise KeyNotRequiredError(key)
-        self._qsettings.setValue(key, value)
+#    def set(self, key, value):
+#        # set TEMPORARILY
+#        if key not in self._key_info:
+#            raise KeyNotRequiredError(key)
+#        # just set it in defaults
+#        self._defaults[key] = value
         
     def validate(self, args=[]):
         parsed_args = vars(self._arg_parser.parse_args(args))
-        config = {}
+        # make this ordered so they are returned in inserted order
+        config = OrderedDict()
         for key, info in self._key_info.iteritems():
             # order of precedence is:
             #   command-line args, stored settings, default, callback
@@ -85,9 +93,9 @@ class ProgramConfig(object):
             
             # the value of the option will be None if not passed on the
             # command-line
-            if parsed_args[key]: 
+            if parsed_args[key]:
                 value = parsed_args[key]
-            elif self._qsettings.contains(key):                    
+            elif self._qsettings.contains(key):
                 value = info.type(self._qsettings.value(key))
             else:
                 try:
@@ -106,7 +114,13 @@ class ProgramConfig(object):
             
         # once all are verified, commit all to QSettings
         for key, value in config.iteritems():
-            if self._key_info[key].is_persistent:
+            value_equal_to_default = False
+            try:
+                value_equal_to_default = self._defaults[key] == value
+            except KeyError:
+                # key doesn't have a default
+                pass
+            if self._key_info[key].is_persistent and not value_equal_to_default:
                 self._qsettings.setValue(key, value)
             
         # ensure settings are written
