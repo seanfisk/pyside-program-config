@@ -217,15 +217,6 @@ def cannot_require_config_again(step):
         assert_raises(DuplicateKeyError,
                       world.program_config.add_required,
                       config['key'])
-        
-#@step('cannot set the configuration')
-#def cannot_set_config(step):
-#    from pyside_program_config import KeyNotRequiredError
-#    for config in world.test_config:
-#        assert_raises(KeyNotRequiredError,
-#                      world.program_config.set,
-#                      config['key'],
-#                      config['value'])
     
 @step('I validate the configuration with command-line options equivalent'
       'to defaults')
@@ -243,73 +234,3 @@ def validate_config_with_command_line_options_equivalent_to_defaults(step):
     with world.mock_arg_parser as mock_arg_parser:
         mock_arg_parser.parse_args(args) >> namespace
     world.program_config.validate(args)
-    
-#
-#@step('I require the key without persistence')
-#def frequire_the_key_without_persistence(step):
-#    with world.mock_arg_parser as mock_arg_parser:
-#        mock_arg_parser.add_argument('--' + world.key,
-#                                     metavar=world.key.upper(),
-#                                     help='random help string',
-#                                     type=world.type)
-#    world.program_config.add_required(world.key,
-#                                      help='random help string',
-#                                      type=world.type,
-#                                      is_persistent=False)
-#    
-#@step('I validate the configuration with command-line options with persistence')
-#def validate_configuration_with_command_line_options(step):
-#    with world.mock_arg_parser as mock_arg_parser:
-#        namespace = Namespace(**{world.key: world.value})
-#        mock_arg_parser.parse_args(['--' + world.key, str(world.value)]) \
-#            >> namespace
-#    with world.mock_qsettings as mock_qsettings:
-#        mock_qsettings.setValue(world.key, world.value)
-#        mock_qsettings.sync()
-#    world.config = world.program_config.validate(['--' + world.key,
-#                                                  str(world.value)])
-#    
-#@step('I validate the configuration with the previously saved values')
-#def validate_the_configuration_with_previously_saved_values(step):
-#    with world.mock_arg_parser as mock_arg_parser:
-#        namespace = Namespace(**{world.key: None})
-#        mock_arg_parser.parse_args([]) >> namespace
-#    with world.mock_qsettings as mock_qsettings:
-#        mock_qsettings.contains(world.key) >> True
-#        mock_qsettings.value(world.key) >> world.value
-#        mock_qsettings.setValue(world.key, world.value)
-#        mock_qsettings.sync()
-#    world.config = world.program_config.validate()
-#    
-#@step('I validate the configuration with the default values')
-#def validate_the_configuration_with_default_values(step):
-#    with world.mock_arg_parser as mock_arg_parser:
-#        namespace = Namespace(**{world.key: None})
-#        mock_arg_parser.parse_args([]) >> namespace
-#    with world.mock_qsettings as mock_qsettings:
-#        mock_qsettings.contains(world.key) >> False
-#        mock_qsettings.setValue(world.key, world.value)
-#        mock_qsettings.sync()
-#    world.config = world.program_config.validate()
-#    
-#@step('I validate the configuration with the callback')
-#def validate_the_configuration_with_callback(step):
-#    with world.mock_arg_parser as mock_arg_parser:
-#        namespace = Namespace(**{world.key: None})
-#        mock_arg_parser.parse_args([]) >> namespace
-#    with world.mock_qsettings as mock_qsettings:
-#        mock_qsettings.contains(world.key) >> False
-#        mock_qsettings.setValue(world.key, world.value)
-#        mock_qsettings.sync()
-#    world.config = world.program_config.validate()
-#    
-#@step('validate the configuration without the optional configuration provided')
-#def validate_the_configuration_without_optional(step):
-#    with world.mock_arg_parser as mock_arg_parser:
-#        namespace = Namespace(**{world.key: None})
-#        mock_arg_parser.parse_args([]) >> namespace
-#    with world.mock_qsettings as mock_qsettings:
-#        mock_qsettings.contains(world.key) >> False
-#        mock_qsettings.sync()
-#    config = world.program_config.validate()
-#    assert_raises(KeyError, config.__getitem__, world.key)    

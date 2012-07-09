@@ -21,13 +21,6 @@ class KeyInfo(object):
         self.type = type
         self.help = help
         self.is_persistent = is_persistent
-        
-#class KeyNotRequiredError(Exception):
-#    def __init__(self, key):
-#        self.key = key
-#    def __str__(self):
-#        return ('Attempted to set key which has not been specified as required'
-#                'or optional:').format(self.key)
 
 class ProgramConfig(object):
     def __init__(self, arg_parser=None, qsettings=None):
@@ -74,13 +67,6 @@ class ProgramConfig(object):
                                   is_persistent=True):
         self.add_required(key, help, type, is_persistent)
         self._defaults[key] = default
-        
-#    def set(self, key, value):
-#        # set TEMPORARILY
-#        if key not in self._key_info:
-#            raise KeyNotRequiredError(key)
-#        # just set it in defaults
-#        self._defaults[key] = value
         
     def validate(self, args=[]):
         parsed_args = vars(self._arg_parser.parse_args(args))

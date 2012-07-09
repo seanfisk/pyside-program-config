@@ -43,10 +43,6 @@ Feature: Save and persist configuration
     Given I have an example configuration
     And I require the configuration with no fallback
     Then I cannot require the configuration again
-      
-#  Scenario: Attempt to set configuration that has not been required
-#    Given I have an example configuration
-#    Then I cannot set the configuration
     
   Scenario: Default configuration is never persisted
     Given I have the configuration:
