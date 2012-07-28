@@ -31,9 +31,18 @@ def read(fname):
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
-        # TODO: add in xdist, number of processors argument
+        # run on multiple processors if possible,
+        # also adapted from pytest documentation examples
         self.test_args = ['--verbose', 'tests']
+        try:
+            import xdist
+            import multiprocessing
+            num = max(multiprocessing.cpu_count() / 2, 1)
+            self.test_args = ['-n', str(num)] + self.test_args
+        except ImportError:
+            pass # oh well
         self.test_suite = True
+        
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
