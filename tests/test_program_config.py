@@ -153,3 +153,17 @@ class TestProgramConfig:
             mock_arg_parser.parse_args([]) >> namespace
         with pytest.raises(RequiredKeyError):
             self.program_config.validate([])
+
+    def test_optional_configuration(self, test_config):
+        for item in test_config:
+            with self.mock_arg_parser as mock_arg_parser:
+                mock_arg_parser.add_argument('--' + item['key'],
+                                             metavar=item['key'].upper(),
+                                             help=item['help'],
+                                             type=item['type']) >> None
+            self.program_config.add_optional(item['key'],
+                                        help=item['help'],
+                                        type=item['type'],
+                is_persistent=item['is_persistent'])
+        real_config = self.validate_no_command_line_no_persistence(test_config)
+        assert real_config == {}
