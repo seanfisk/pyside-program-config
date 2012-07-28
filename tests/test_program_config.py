@@ -2,6 +2,7 @@ from pyside_program_config import ProgramConfig
 from argparse import Namespace
 
 from ludibrio import Mock
+import pytest
 
 def pytest_funcarg__test_config(request):
     return [{'key': 'verbosity',
@@ -135,3 +136,20 @@ class TestProgramConfig:
 
         real_config = self.validate_no_command_line_no_persistence(test_config)
         self.assert_config_available(test_config, real_config)
+
+    def test_required_configuration_fails_when_not_given(self, test_config):
+        self.require_no_fallback(test_config)
+        from pyside_program_config import RequiredKeyError
+        namespace_dict = {}
+        with self.mock_qsettings as mock_qsettings:
+            for item in test_config:
+                mock_qsettings.contains(item['key']) >> False
+                namespace_dict[item['key']] = None
+                # never persist anything upon failure
+                # make sure to use a persistent key first
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args([]) >> namespace
+        with pytest.raises(RequiredKeyError):
+            self.program_config.validate([])
