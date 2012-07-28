@@ -34,6 +34,19 @@ class TestProgramConfig:
                                         type=item['type'],
                 is_persistent=item['is_persistent'])
 
+    def validate_no_command_line_no_persistence(self, config):
+        namespace_dict = {}
+        with self.mock_qsettings as mock_qsettings:
+            for item in config:
+                mock_qsettings.contains(item['key']) >> False
+                namespace_dict[item['key']] = None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args([]) >> namespace
+        return self.program_config.validate([])
+
     def assert_config_available(self, test, real):
         for item in test:
             assert item['value'] == real[item['key']]
@@ -91,16 +104,34 @@ class TestProgramConfig:
                                                        help=item['help'],
                                                        type=item['type'],
                                                        is_persistent=item['is_persistent'])
-        namespace_dict = {}
-        with self.mock_qsettings as mock_qsettings:
-            for item in test_config:
-                mock_qsettings.contains(item['key']) >> False
-                namespace_dict[item['key']] = None
-            mock_qsettings.sync() >> None
+        real_config = self.validate_no_command_line_no_persistence(test_config)
+        self.assert_config_available(test_config, real_config)
 
-        namespace = Namespace(**namespace_dict)
+    def test_required_configuration_callback(self):
+        # IMPORTANT:
+        # Because of the callback function, only use one config item
+        item = {'key': 'verbosity',
+                'value': 3,
+                'help': 'how much output to print',
+                'type': int,
+                'is_persistent': False}
         with self.mock_arg_parser as mock_arg_parser:
-            mock_arg_parser.parse_args([]) >> namespace
-        real_config = self.program_config.validate([])
+                mock_arg_parser.add_argument('--' + item['key'],
+                                             metavar=item['key'].upper(),
+                                             help=item['help'],    
+                                             type=item['type']) >> None
+        def callback(key, help, type):
+            assert item['key'] == key
+            assert item['help'] == help
+            assert item['type'] == type
+            return item['value']
+        self.program_config.add_required_with_callback(item['key'],
+                                                       callback,
+                                                       help=item['help'],
+                                                       type=item['type'],
+            is_persistent=item['is_persistent'])
 
+        test_config = [item]
+
+        real_config = self.validate_no_command_line_no_persistence(test_config)
         self.assert_config_available(test_config, real_config)
