@@ -167,3 +167,10 @@ class TestProgramConfig:
                 is_persistent=item['is_persistent'])
         real_config = self.validate_no_command_line_no_persistence(test_config)
         assert real_config == {}
+
+    def test_add_duplicate_configuration(self, test_config):
+        self.require_no_fallback(test_config)
+        from pyside_program_config import DuplicateKeyError
+        for item in test_config:
+            with pytest.raises(DuplicateKeyError):
+                self.program_config.add_required(item['key'])
