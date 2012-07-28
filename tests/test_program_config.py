@@ -57,3 +57,24 @@ class TestProgramConfig:
         real_config = self.program_config.validate(args)
 
         self.assert_config_available(test_config, real_config)
+
+    def test_required_configuration_previously_saved(self, test_config):
+        self.require_no_fallback(test_config)
+
+        namespace_dict = {}
+        with self.mock_qsettings as mock_qsettings:
+            for item in test_config:
+                mock_qsettings.contains(item['key']) >> True
+                mock_qsettings.value(item['key']) >> item['value']
+                namespace_dict[item['key']] = None
+            for item in test_config:
+                if item['is_persistent']:
+                    mock_qsettings.setValue(item['key'], item['value']) >> None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args([]) >> namespace
+        real_config = self.program_config.validate([])
+
+        self.assert_config_available(test_config, real_config)
