@@ -35,6 +35,19 @@ class TestProgramConfig:
                                         type=item['type'],
                 is_persistent=item['is_persistent'])
 
+    def require_default(self, config):
+        for item in config:
+            with self.mock_arg_parser as mock_arg_parser:
+                mock_arg_parser.add_argument('--' + item['key'],
+                                             metavar=item['key'].upper(),
+                                             help=item['help'],
+                                             type=item['type']) >> None
+            self.program_config.add_required_with_default(item['key'],
+                                                       item['value'],
+                                                       help=item['help'],
+                                                       type=item['type'],
+                                                       is_persistent=item['is_persistent'])
+
     def validate_no_command_line_no_persistence(self, config):
         namespace_dict = {}
         with self.mock_qsettings as mock_qsettings:
@@ -54,6 +67,7 @@ class TestProgramConfig:
 
     def test_required_configuration_specified_on_command_line(self, test_config):
         self.require_no_fallback(test_config)
+        
         namespace_dict = {}
         args = []
         with self.mock_qsettings as mock_qsettings:
@@ -94,17 +108,7 @@ class TestProgramConfig:
         self.assert_config_available(test_config, real_config)
 
     def test_required_configuration_default_value(self, test_config):
-        for item in test_config:
-            with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + item['key'],
-                                             metavar=item['key'].upper(),
-                                             help=item['help'],
-                                             type=item['type']) >> None
-            self.program_config.add_required_with_default(item['key'],
-                                                       item['value'],
-                                                       help=item['help'],
-                                                       type=item['type'],
-                                                       is_persistent=item['is_persistent'])
+        self.require_default(test_config)
         real_config = self.validate_no_command_line_no_persistence(test_config)
         self.assert_config_available(test_config, real_config)
 
@@ -174,3 +178,27 @@ class TestProgramConfig:
         for item in test_config:
             with pytest.raises(DuplicateKeyError):
                 self.program_config.add_required(item['key'])
+
+    def test_default_configuration_never_persisted(self, test_config):
+        self.require_default(test_config)
+        real_config = self.validate_no_command_line_no_persistence(test_config)
+        self.assert_config_available(test_config, real_config)
+
+    def test_default_configuration_on_command_line_never_persisted(self, test_config):
+        self.require_default(test_config)
+
+        namespace_dict = {}
+        args = []
+        with self.mock_qsettings as mock_qsettings:
+            for item in test_config:
+                namespace_dict[item['key']] = item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args(args) >> namespace
+        real_config = self.program_config.validate(args)
+
+        self.assert_config_available(test_config, real_config)
