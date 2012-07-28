@@ -78,3 +78,29 @@ class TestProgramConfig:
         real_config = self.program_config.validate([])
 
         self.assert_config_available(test_config, real_config)
+
+    def test_required_configuration_default_value(self, test_config):
+        for item in test_config:
+            with self.mock_arg_parser as mock_arg_parser:
+                mock_arg_parser.add_argument('--' + item['key'],
+                                             metavar=item['key'].upper(),
+                                             help=item['help'],
+                                             type=item['type']) >> None
+            self.program_config.add_required_with_default(item['key'],
+                                                       item['value'],
+                                                       help=item['help'],
+                                                       type=item['type'],
+                                                       is_persistent=item['is_persistent'])
+        namespace_dict = {}
+        with self.mock_qsettings as mock_qsettings:
+            for item in test_config:
+                mock_qsettings.contains(item['key']) >> False
+                namespace_dict[item['key']] = None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args([]) >> namespace
+        real_config = self.program_config.validate([])
+
+        self.assert_config_available(test_config, real_config)
