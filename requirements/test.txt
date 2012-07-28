@@ -2,6 +2,7 @@
 -r use.txt
 
 # requirements for testing
-lettuce
+pytest
+pytest-xdist
 nose
 ludibrio
