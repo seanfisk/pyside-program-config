@@ -3,49 +3,57 @@ from argparse import Namespace
 
 from ludibrio import Mock
 
-class TestProgramConfig:
-    def test_required_configuration_specified_on_command_line(self):
-        mock_arg_parser = Mock()
-        mock_qsettings = Mock()
-        program_config = ProgramConfig(arg_parser=mock_arg_parser,
-                                       qsettings=mock_qsettings)
-        test_config = [{'key': 'verbosity',
-                   'value': 3,
-                   'type': int,
-                   'help': 'how much output to print',
-                   'is_persistent': True},
-                   {'key': 'name',
-                    'value': 'sean',
-                    'type': str,
-                    'help': 'your name',
-                    'is_persistent': False}]
-        for config in test_config:
-            with mock_arg_parser:
-                mock_arg_parser.add_argument('--' + config['key'],
-                                             metavar=config['key'].upper(),
-                                             help=config['help'],
-                                             type=config['type']) >> None
-            program_config.add_required(config['key'],
-                                        help=config['help'],
-                                        type=config['type'],
-                is_persistent=config['is_persistent'])
+def pytest_funcarg__test_config(request):
+    return [{'key': 'verbosity',
+             'value': 3,
+             'type': int,
+             'help': 'how much output to print',
+             'is_persistent': True},
+             {'key': 'name',
+              'value': 'sean',
+              'type': str,
+              'help': 'your name',
+              'is_persistent': False}]
 
+class TestProgramConfig:
+    def setup_method(self, method):
+        self.mock_arg_parser = Mock()
+        self.mock_qsettings = Mock()
+        self.program_config = ProgramConfig(arg_parser=self.mock_arg_parser,
+                                            qsettings=self.mock_qsettings)
+
+    def require_no_fallback(self, config):
+        for item in config:
+            with self.mock_arg_parser as mock_arg_parser:
+                mock_arg_parser.add_argument('--' + item['key'],
+                                             metavar=item['key'].upper(),
+                                             help=item['help'],
+                                             type=item['type']) >> None
+            self.program_config.add_required(item['key'],
+                                        help=item['help'],
+                                        type=item['type'],
+                is_persistent=item['is_persistent'])
+
+    def assert_config_available(self, test, real):
+        for item in test:
+            assert item['value'] == real[item['key']]
+
+    def test_required_configuration_specified_on_command_line(self, test_config):
+        self.require_no_fallback(test_config)
         namespace_dict = {}
         args = []
-        with mock_qsettings:
-            for config in test_config:
-                namespace_dict[config['key']] = config['value']
-                args.append('--' + config['key'])
-                args.append(str(config['value']))
-                if config['is_persistent']:
-                    mock_qsettings.setValue(config['key'], config['value']) >> None
+        with self.mock_qsettings as mock_qsettings:
+            for item in test_config:
+                namespace_dict[item['key']] = item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
+                if item['is_persistent']:
+                    mock_qsettings.setValue(item['key'], item['value']) >> None
             mock_qsettings.sync() >> None
 
         namespace = Namespace(**namespace_dict)
-        with mock_arg_parser:
+        with self.mock_arg_parser as mock_arg_parser:
             mock_arg_parser.parse_args(args) >> namespace
-        real_config = program_config.validate(args)
+        real_config = self.program_config.validate(args)
 
-        for config in test_config:
-            assert config['value'] == real_config[config['key']]
-
+        self.assert_config_available(test_config, real_config)
