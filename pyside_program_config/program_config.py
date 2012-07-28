@@ -1,7 +1,4 @@
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 class RequiredKeyError(Exception):
     def __init__(self, key):

@@ -1,7 +1,3 @@
 # requirements for using the library
 
-# argument parsing (in Python standard library >= 2.7)
-argparse
-
-# OrderedDict fallback (in Python standard library >= 2.7)
-ordereddict
+# PySide is required, but cannot be installed through PyPi

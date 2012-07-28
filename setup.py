@@ -10,6 +10,14 @@ import distribute_setup
 distribute_setup.use_setuptools()
 
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
+install_requirements = []
+
+test_requirements = [
+    'pytest',
+    'ludibrio'
+]
 
 # credit: <http://packages.python.org/an_example_pypi_project/setuptools.html>
 # Utility function to read the README file.
@@ -19,10 +27,17 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-install_requirements = [
-    'argparse',
-    'ordereddict'
-]
+# stolen from pytest's documentation
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        # TODO: add in xdist, number of processors argument
+        self.test_args = ['--verbose', 'tests']
+        self.test_suite = True
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        pytest.main(self.test_args)
 
 # see here for more options:
 # <http://packages.python.org/distribute/setuptools.html>
@@ -53,5 +68,7 @@ setup(name=metadata.title,
           ],
       packages=find_packages(),
       install_requires=install_requirements,
+      tests_require=test_requirements,
+      cmdclass={'test': PyTest},
       zip_safe=False, # don't use eggs
       )

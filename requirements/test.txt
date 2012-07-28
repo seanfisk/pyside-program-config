@@ -3,6 +3,5 @@
 
 # requirements for testing
 pytest
-pytest-xdist
-nose
+# pytest-xdist
 ludibrio
