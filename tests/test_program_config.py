@@ -23,10 +23,16 @@ class TestProgramConfig:
         self.program_config = ProgramConfig(arg_parser=self.mock_arg_parser,
                                             qsettings=self.mock_qsettings)
 
+    def key_from_argparse(self, key):
+        return key.replace('-', '_')
+
+    def key_to_argparse(self, key):
+        return key.replace('_', '-')
+
     def require_no_fallback(self, config):
         for item in config:
             with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + item['key'],
+                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
                                              metavar=item['key'].upper(),
                                              help=item['help'],
                                              type=item['type']) >> None
@@ -38,7 +44,7 @@ class TestProgramConfig:
     def require_default(self, config):
         for item in config:
             with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + item['key'],
+                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
                                              metavar=item['key'].upper(),
                                              help=item['help'],
                                              type=item['type']) >> None
@@ -53,7 +59,7 @@ class TestProgramConfig:
         with self.mock_qsettings as mock_qsettings:
             for item in config:
                 mock_qsettings.contains(item['key']) >> False
-                namespace_dict[item['key']] = None
+                namespace_dict[self.key_from_argparse(item['key'])] = None
             mock_qsettings.sync() >> None
 
         namespace = Namespace(**namespace_dict)
@@ -61,18 +67,12 @@ class TestProgramConfig:
             mock_arg_parser.parse_args([]) >> namespace
         return self.program_config.validate([])
 
-    def assert_config_available(self, test, real):
-        for item in test:
-            assert item['value'] == real[item['key']]
-
-    def test_required_configuration_specified_on_command_line(self, test_config):
-        self.require_no_fallback(test_config)
-        
+    def validate_command_line_persistence(self, config):
         namespace_dict = {}
         args = []
         with self.mock_qsettings as mock_qsettings:
-            for item in test_config:
-                namespace_dict[item['key']] = item['value']
+            for item in config:
+                namespace_dict[self.key_from_argparse(item['key'])] = item['value']
                 args.append('--' + item['key'])
                 args.append(str(item['value']))
                 if item['is_persistent']:
@@ -82,8 +82,15 @@ class TestProgramConfig:
         namespace = Namespace(**namespace_dict)
         with self.mock_arg_parser as mock_arg_parser:
             mock_arg_parser.parse_args(args) >> namespace
-        real_config = self.program_config.validate(args)
+        return self.program_config.validate(args)
 
+    def assert_config_available(self, test, real):
+        for item in test:
+            assert item['value'] == real[item['key']]
+
+    def test_required_configuration_specified_on_command_line(self, test_config):
+        self.require_no_fallback(test_config)
+        real_config = self.validate_command_line_persistence(test_config)
         self.assert_config_available(test_config, real_config)
 
     def test_required_configuration_previously_saved(self, test_config):
@@ -121,7 +128,7 @@ class TestProgramConfig:
                 'type': int,
                 'is_persistent': False}
         with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + item['key'],
+                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
                                              metavar=item['key'].upper(),
                                              help=item['help'],    
                                              type=item['type']) >> None
@@ -161,7 +168,7 @@ class TestProgramConfig:
     def test_optional_configuration(self, test_config):
         for item in test_config:
             with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + item['key'],
+                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
                                              metavar=item['key'].upper(),
                                              help=item['help'],
                                              type=item['type']) >> None
@@ -202,3 +209,32 @@ class TestProgramConfig:
         real_config = self.program_config.validate(args)
 
         self.assert_config_available(test_config, real_config)
+
+    def test_handles_hyphens_properly(self):
+        # argparse converts hyphens to underscores in the Namespace object since
+        # hyphens are not valid characters in Python identifiers
+        # PySide Program Config should always use hyphens in its command-line
+        # xargument names
+        # however, this should be transparent to the user
+        test_config = [{'key': 'key-with-hyphens',
+             'value': 10,
+             'type': int,
+             'help': 'just a test',
+             'is_persistent': False}]
+        self.require_no_fallback(test_config)
+        real_config = self.validate_command_line_persistence(test_config)
+        self.assert_config_available(test_config, real_config)
+        
+    def test_handles_underscores_properly(self):
+        # PySide Program Config should always use hyphens in its command-line
+        # argument names
+        # however, this should be transparent to the user
+        test_config = [{'key': 'key_with_underscores',
+             'value': 10,
+             'type': int,
+             'help': 'just a test',
+             'is_persistent': False}]
+        self.require_no_fallback(test_config)
+        real_config = self.validate_command_line_persistence(test_config)
+        self.assert_config_available(test_config, real_config)        
+        

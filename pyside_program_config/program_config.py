@@ -52,6 +52,27 @@ class ProgramConfig(object):
         self._defaults = {}
         # similar story here
         self._callbacks = {}
+
+    def _key_from_argparse(self, key):
+        """Utility method to transform a key for use with :mod:`argparse`.
+
+        :param key: the key to transform
+        :type key: :class:`str`
+        :returns: the transformed key
+        :rtype: :class:`str`
+        """
+        return key.replace('-', '_')
+
+    def _key_to_argparse(self, key):
+        """Utility method to transform a key for the purposes of pulling from
+        :mod:`argparse`.
+
+        :param key: the key to transform
+        :type key: :class:`str`
+        :returns: the transformed key
+        :rtype: :class:`str`
+        """
+        return key.replace('_', '-')
     
     def _add_key(self, key, is_required, help, type, is_persistent):
         """Utility method to add a key to the key storage variable.
@@ -71,7 +92,7 @@ class ProgramConfig(object):
         if key in self._key_info:
             raise DuplicateKeyError(key)
         self._key_info[key] = KeyInfo(is_required, help, type, is_persistent)
-        self._arg_parser.add_argument('--' + key,
+        self._arg_parser.add_argument('--' + self._key_to_argparse(key),
                                       metavar=key.upper(),
                                       help=help,
                                       type=type)
@@ -195,8 +216,9 @@ class ProgramConfig(object):
             
             # the value of the option will be None if not passed on the
             # command-line
-            if parsed_args[key]:
-                value = parsed_args[key]
+            parsed_value = parsed_args[self._key_from_argparse(key)]
+            if parsed_value is not None:
+                value = parsed_value
             elif self._qsettings.contains(key):
                 value = info.type(self._qsettings.value(key))
             else:
