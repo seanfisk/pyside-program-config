@@ -13,6 +13,9 @@ class DuplicateKeyError(Exception):
         return 'Attempt to define duplicate key: {0}'.format(self.key)
     
 class KeyInfo(object):
+    """
+    .. todo:: Rename ``is_persistent`` to ``persistent``
+    """
     def __init__(self, is_required, help, type, is_persistent):
         self.is_required = is_required
         self.type = type

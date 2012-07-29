@@ -4,14 +4,6 @@
 
 .. todolist::
 
-.. todo::
-
-   Start the coding.
-
-.. todo::
-
-   Start the documentation.
-
-.. todo::
-
-   Continuous integration with Travis CI.
+.. todo:: Improve documentation.
+.. todo:: Improve comments in tests.
+.. todo:: Fix Travis CI integration.
