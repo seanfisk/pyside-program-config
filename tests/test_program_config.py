@@ -29,25 +29,25 @@ class TestProgramConfig:
     def key_to_argparse(self, key):
         return key.replace('_', '-')
 
-    def require_no_fallback(self, config):
-        for item in config:
-            with self.mock_arg_parser as mock_arg_parser:
+    def add_argument(self, item):
+        with self.mock_arg_parser as mock_arg_parser:
                 mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
                                              metavar=item['key'].upper(),
                                              help=item['help'],
                                              type=item['type']) >> None
+
+    def require_no_fallback(self, config):
+        for item in config:
+            self.add_argument(item)
             self.program_config.add_required(item['key'],
                                         help=item['help'],
                                         type=item['type'],
                 is_persistent=item['is_persistent'])
 
+
     def require_default(self, config):
         for item in config:
-            with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
-                                             metavar=item['key'].upper(),
-                                             help=item['help'],
-                                             type=item['type']) >> None
+            self.add_argument(item)
             self.program_config.add_required_with_default(item['key'],
                                                        item['value'],
                                                        help=item['help'],
@@ -127,11 +127,7 @@ class TestProgramConfig:
                 'help': 'how much output to print',
                 'type': int,
                 'is_persistent': False}
-        with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
-                                             metavar=item['key'].upper(),
-                                             help=item['help'],    
-                                             type=item['type']) >> None
+        self.add_argument(item)
         def callback(key, help, type):
             assert item['key'] == key
             assert item['help'] == help
@@ -167,11 +163,7 @@ class TestProgramConfig:
 
     def test_optional_configuration(self, test_config):
         for item in test_config:
-            with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
-                                             metavar=item['key'].upper(),
-                                             help=item['help'],
-                                             type=item['type']) >> None
+            self.add_argument(item)
             self.program_config.add_optional(item['key'],
                                         help=item['help'],
                                         type=item['type'],
