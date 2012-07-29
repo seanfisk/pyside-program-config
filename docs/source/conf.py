@@ -369,5 +369,5 @@ pdf_fit_background_mode = 'scale'
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python' : ('http://docs.python.org/', None),
-    # 'PySide' : ('http://www.pyside.org/docs/pyside/', None)
+    'PySide' : ('http://www.pyside.org/docs/pyside/', None)
     }
