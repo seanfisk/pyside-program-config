@@ -34,9 +34,11 @@ class ProgramConfig(object):
         # creating explicit dependencies on ArgumentParser and QSettings,
         # and makes this module more easily testable 
         if arg_parser is None:
+            # following two lines reported as not covered... that's OK
             from argparse import ArgumentParser
             arg_parser = ArgumentParser()
         if qsettings is None:
+            # following two lines reported as not covered... that's OK
             from PySide.QtCore import QSettings
             qsettings = QSettings()
             
@@ -229,6 +231,9 @@ class ProgramConfig(object):
                         if info.required:
                             raise RequiredKeyError(key)
                         else:
+                            # coverage.py reports this line as not covered
+                            # ... lies! It is covered in the
+                            # test_optional_configuration test
                             continue
             config[key] = value
             

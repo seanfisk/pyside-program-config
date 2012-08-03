@@ -183,8 +183,9 @@ class TestProgramConfig:
         namespace = Namespace(**namespace_dict)
         with self.mock_arg_parser as mock_arg_parser:
             mock_arg_parser.parse_args([]) >> namespace
-        with pytest.raises(RequiredKeyError):
+        with pytest.raises(RequiredKeyError) as e:
             self.program_config.validate([])
+        assert str(e).endswith('Required key not provided: {0}'.format(test_config[0]['key']))
 
     def test_optional_configuration(self, test_config):
         for item in test_config:
@@ -200,8 +201,9 @@ class TestProgramConfig:
         self.require_no_fallback(test_config)
         from pyside_program_config import DuplicateKeyError
         for item in test_config:
-            with pytest.raises(DuplicateKeyError):
+            with pytest.raises(DuplicateKeyError) as e:
                 self.program_config.add_required(item['key'])
+            assert str(e).endswith('Attempt to define duplicate key: {0}'.format(item['key']))
 
     def test_default_configuration_never_persisted(self, test_config):
         self.require_default(test_config)
