@@ -21,11 +21,10 @@ class KeyInfo(object):
     """
     Key configuration item storage object.
     
-    .. todo:: Rename ``is_required`` to ``required``
     .. todo:: Rename ``is_persistent`` to ``persistent``
     """
-    def __init__(self, is_required, help, type, is_persistent):
-        self.is_required = is_required
+    def __init__(self, required, help, type, is_persistent):
+        self.required = required
         self.type = type
         self.help = help
         self.is_persistent = is_persistent
@@ -74,13 +73,13 @@ class ProgramConfig(object):
         """
         return key.replace('_', '-')
     
-    def _add_key(self, key, is_required, help, type, is_persistent):
+    def _add_key(self, key, required, help, type, is_persistent):
         """Utility method to add a key to the key storage variable.
         
         :param key: the key to add
         :type key: :class:`str`
-        :param is_required: whether the key is required
-        :type is_required: :class:`bool`
+        :param required: whether the key is required
+        :type required: :class:`bool`
         :param help: description of the purpose of the key
         :type help: :class:`str`
         :param type: the type of the key
@@ -91,7 +90,7 @@ class ProgramConfig(object):
         """
         if key in self._key_info:
             raise DuplicateKeyError(key)
-        self._key_info[key] = KeyInfo(is_required, help, type, is_persistent)
+        self._key_info[key] = KeyInfo(required, help, type, is_persistent)
         self._arg_parser.add_argument('--' + self._key_to_argparse(key),
                                       metavar=key.upper(),
                                       help=help,
@@ -230,7 +229,7 @@ class ProgramConfig(object):
                                                      info.help,
                                                      info.type)
                     except KeyError:
-                        if info.is_required:
+                        if info.required:
                             raise RequiredKeyError(key)
                         else:
                             continue
