@@ -9,12 +9,12 @@ def pytest_funcarg__test_config(request):
              'value': 3,
              'type': int,
              'help': 'how much output to print',
-             'is_persistent': True},
+             'persistent': True},
              {'key': 'name',
               'value': 'sean',
               'type': str,
               'help': 'your name',
-              'is_persistent': False}]
+              'persistent': False}]
 
 class TestProgramConfig:
     def setup_method(self, method):
@@ -42,7 +42,7 @@ class TestProgramConfig:
             self.program_config.add_required(item['key'],
                                         help=item['help'],
                                         type=item['type'],
-                is_persistent=item['is_persistent'])
+                persistent=item['persistent'])
 
 
     def require_default(self, config):
@@ -52,7 +52,7 @@ class TestProgramConfig:
                                                        item['value'],
                                                        help=item['help'],
                                                        type=item['type'],
-                                                       is_persistent=item['is_persistent'])
+                                                       persistent=item['persistent'])
 
     def validate_no_command_line_no_persistence(self, config):
         namespace_dict = {}
@@ -75,7 +75,7 @@ class TestProgramConfig:
                 namespace_dict[self.key_from_argparse(item['key'])] = item['value']
                 args.append('--' + item['key'])
                 args.append(str(item['value']))
-                if item['is_persistent']:
+                if item['persistent']:
                     mock_qsettings.setValue(item['key'], item['value']) >> None
             mock_qsettings.sync() >> None
 
@@ -103,7 +103,7 @@ class TestProgramConfig:
                 mock_qsettings.value(item['key']) >> item['value']
                 namespace_dict[item['key']] = None
             for item in test_config:
-                if item['is_persistent']:
+                if item['persistent']:
                     mock_qsettings.setValue(item['key'], item['value']) >> None
             mock_qsettings.sync() >> None
 
@@ -126,7 +126,7 @@ class TestProgramConfig:
                 'value': 3,
                 'help': 'how much output to print',
                 'type': int,
-                'is_persistent': False}
+                'persistent': False}
         self.add_argument(item)
         def callback(key, help, type):
             assert item['key'] == key
@@ -137,7 +137,7 @@ class TestProgramConfig:
                                                        callback,
                                                        help=item['help'],
                                                        type=item['type'],
-            is_persistent=item['is_persistent'])
+            persistent=item['persistent'])
 
         test_config = [item]
 
@@ -167,7 +167,7 @@ class TestProgramConfig:
             self.program_config.add_optional(item['key'],
                                         help=item['help'],
                                         type=item['type'],
-                is_persistent=item['is_persistent'])
+                persistent=item['persistent'])
         real_config = self.validate_no_command_line_no_persistence(test_config)
         assert real_config == {}
 
@@ -212,7 +212,7 @@ class TestProgramConfig:
              'value': 10,
              'type': int,
              'help': 'just a test',
-             'is_persistent': False}]
+             'persistent': False}]
         self.require_no_fallback(test_config)
         real_config = self.validate_command_line_persistence(test_config)
         self.assert_config_available(test_config, real_config)
@@ -225,7 +225,7 @@ class TestProgramConfig:
              'value': 10,
              'type': int,
              'help': 'just a test',
-             'is_persistent': False}]
+             'persistent': False}]
         self.require_no_fallback(test_config)
         real_config = self.validate_command_line_persistence(test_config)
         self.assert_config_available(test_config, real_config)        

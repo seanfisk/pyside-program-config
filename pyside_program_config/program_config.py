@@ -18,16 +18,13 @@ class DuplicateKeyError(Exception):
         return 'Attempt to define duplicate key: {0}'.format(self.key)
     
 class KeyInfo(object):
+    """Key configuration item storage object.
     """
-    Key configuration item storage object.
-    
-    .. todo:: Rename ``is_persistent`` to ``persistent``
-    """
-    def __init__(self, required, help, type, is_persistent):
+    def __init__(self, required, help, type, persistent):
         self.required = required
         self.type = type
         self.help = help
-        self.is_persistent = is_persistent
+        self.persistent = persistent
 
 class ProgramConfig(object):
     """Main program configuration object. Manages and stores all
@@ -73,7 +70,7 @@ class ProgramConfig(object):
         """
         return key.replace('_', '-')
     
-    def _add_key(self, key, required, help, type, is_persistent):
+    def _add_key(self, key, required, help, type, persistent):
         """Utility method to add a key to the key storage variable.
         
         :param key: the key to add
@@ -84,19 +81,19 @@ class ProgramConfig(object):
         :type help: :class:`str`
         :param type: the type of the key
         :type type: :class:`type`
-        :param is_persistent: whether the key should persist between runs
-        :type is_persistent: :class:`bool`
+        :param persistent: whether the key should persist between runs
+        :type persistent: :class:`bool`
         :raises: :exc:`DuplicateKeyError` -- when the key has already been added
         """
         if key in self._key_info:
             raise DuplicateKeyError(key)
-        self._key_info[key] = KeyInfo(required, help, type, is_persistent)
+        self._key_info[key] = KeyInfo(required, help, type, persistent)
         self._arg_parser.add_argument('--' + self._key_to_argparse(key),
                                       metavar=key.upper(),
                                       help=help,
                                       type=type)
     
-    def add_required(self, key, help=None, type=str, is_persistent=True):
+    def add_required(self, key, help=None, type=str, persistent=True):
         """Add a required configuration item. Since no fallback is provided, the
         configuration will fail to validate if no key is provided.
         
@@ -106,13 +103,13 @@ class ProgramConfig(object):
         :type help: :class:`str`
         :param type: the type of the key
         :type type: :class:`type`
-        :param is_persistent: whether the key should persist between runs
-        :type is_persistent: :class:`bool`
+        :param persistent: whether the key should persist between runs
+        :type persistent: :class:`bool`
         :raises: :exc:`DuplicateKeyError` -- when the key has already been added
         """
-        self._add_key(key, True, help, type, is_persistent)
+        self._add_key(key, True, help, type, persistent)
         
-    def add_optional(self, key, help=None, type=str, is_persistent=True):
+    def add_optional(self, key, help=None, type=str, persistent=True):
         """Add an optional configuration item.
         
         :param key: the key to add
@@ -121,14 +118,14 @@ class ProgramConfig(object):
         :type help: :class:`str`
         :param type: the type of the key
         :type type: :class:`type`
-        :param is_persistent: whether the key should persist between runs
-        :type is_persistent: :class:`bool`
+        :param persistent: whether the key should persist between runs
+        :type persistent: :class:`bool`
         :raises: :exc:`DuplicateKeyError` -- when the key has already been added
         """
-        self._add_key(key, False, help, type, is_persistent)
+        self._add_key(key, False, help, type, persistent)
     
     def add_required_with_callback(self, key, callback, help=None, type=str,
-                                   is_persistent=True):
+                                   persistent=True):
         """Add a required configuration item which calls the specified callback
         function. For example, one could use this to ask the user to input
         neceesary information. This function is passed three parameters and should return the
@@ -162,15 +159,15 @@ class ProgramConfig(object):
         :type help: :class:`str`
         :param type: the type of the key
         :type type: :class:`type`
-        :param is_persistent: whether the key should persist between runs
-        :type is_persistent: :class:`bool`
+        :param persistent: whether the key should persist between runs
+        :type persistent: :class:`bool`
         :raises: :exc:`DuplicateKeyError` -- when the key has already been added
         """
-        self.add_required(key, help, type, is_persistent)
+        self.add_required(key, help, type, persistent)
         self._callbacks[key] = callback
     
     def add_required_with_default(self, key, default, help=None, type=str,
-                                  is_persistent=True):
+                                  persistent=True):
         """Add a required key with a default value.
         
         :param key: the key to add
@@ -181,11 +178,11 @@ class ProgramConfig(object):
         :type help: :class:`str`
         :param type: the type of the key
         :type type: :class:`type`
-        :param is_persistent: whether the key should persist between runs
-        :type is_persistent: :class:`bool`
+        :param persistent: whether the key should persist between runs
+        :type persistent: :class:`bool`
         :raises: :exc:`DuplicateKeyError` -- when the key has already been added
         """
-        self.add_required(key, help, type, is_persistent)
+        self.add_required(key, help, type, persistent)
         self._defaults[key] = default
         
     def validate(self, args=[]):
@@ -243,7 +240,7 @@ class ProgramConfig(object):
             except KeyError:
                 # key doesn't have a default
                 pass
-            if self._key_info[key].is_persistent and not value_equal_to_default:
+            if self._key_info[key].persistent and not value_equal_to_default:
                 self._qsettings.setValue(key, value)
             
         # ensure settings are written
