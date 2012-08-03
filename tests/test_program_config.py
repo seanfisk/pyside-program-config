@@ -16,6 +16,16 @@ def pytest_funcarg__test_config(request):
               'help': 'your name',
               'persistent': False}]
 
+def pytest_funcarg__test_config_default_persistence(request):
+    return [{'key': 'default-persistence-test',
+             'value': 'meaningless',
+             'type': str,
+             'help': 'help one'},
+             {'key': 'default-persistence-test-two',
+              'value': 'no meaning',
+              'type': str,
+              'help': 'help two'}]
+
 class TestProgramConfig:
     def setup_method(self, method):
         self.mock_arg_parser = Mock()
@@ -77,6 +87,21 @@ class TestProgramConfig:
                 args.append(str(item['value']))
                 if item['persistent']:
                     mock_qsettings.setValue(item['key'], item['value']) >> None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args(args) >> namespace
+        return self.program_config.validate(args)
+
+    def validate_command_line_no_persistence(self, config):
+        namespace_dict = {}
+        args = []
+        with self.mock_qsettings as mock_qsettings:
+            for item in config:
+                namespace_dict[self.key_from_argparse(item['key'])] = item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
             mock_qsettings.sync() >> None
 
         namespace = Namespace(**namespace_dict)
@@ -230,3 +255,51 @@ class TestProgramConfig:
         real_config = self.validate_command_line_persistence(test_config)
         self.assert_config_available(test_config, real_config)        
         
+    def test_default_persistence_is_not_persistent_no_fallback(self, test_config_default_persistence):
+        for item in test_config_default_persistence:
+            self.add_argument(item)
+            self.program_config.add_required(item['key'],
+                                             help=item['help'],
+                type=item['type'])
+        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence, real_config)
+
+    def test_default_persistence_is_not_persistent_optional(self, test_config_default_persistence):
+        for item in test_config_default_persistence:
+            self.add_argument(item)
+            self.program_config.add_optional(item['key'],
+                                             help=item['help'],
+                type=item['type'])
+        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence, real_config)
+
+    def test_default_persistence_is_not_persistent_callback(self):
+        # IMPORTANT:
+        # Because of the callback function, only use one config item
+        item = {'key': 'verbosity',
+                'value': 3,
+                'help': 'how much output to print',
+                'type': int}
+        self.add_argument(item)
+        def callback(key, help, type):
+            assert item['key'] == key
+            assert item['help'] == help
+            assert item['type'] == type
+            return item['value']
+        self.program_config.add_required_with_callback(item['key'],
+                                                       callback,
+                                                       help=item['help'],
+                                                       type=item['type'])
+        test_config_default_persistence = [item]
+        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence, real_config)
+
+    def test_default_persistence_is_not_persistent_default(self, test_config_default_persistence):
+        for item in test_config_default_persistence:
+            self.add_argument(item)
+            self.program_config.add_required_with_default(item['key'],
+                                                          item['value'],
+                                                          help=item['help'],
+                type=item['type'])
+        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence, real_config)

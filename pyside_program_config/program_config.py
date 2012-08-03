@@ -93,7 +93,7 @@ class ProgramConfig(object):
                                       help=help,
                                       type=type)
     
-    def add_required(self, key, help=None, type=str, persistent=True):
+    def add_required(self, key, help=None, type=str, persistent=False):
         """Add a required configuration item. Since no fallback is provided, the
         configuration will fail to validate if no key is provided.
         
@@ -109,7 +109,7 @@ class ProgramConfig(object):
         """
         self._add_key(key, True, help, type, persistent)
         
-    def add_optional(self, key, help=None, type=str, persistent=True):
+    def add_optional(self, key, help=None, type=str, persistent=False):
         """Add an optional configuration item.
         
         :param key: the key to add
@@ -125,7 +125,7 @@ class ProgramConfig(object):
         self._add_key(key, False, help, type, persistent)
     
     def add_required_with_callback(self, key, callback, help=None, type=str,
-                                   persistent=True):
+                                   persistent=False):
         """Add a required configuration item which calls the specified callback
         function. For example, one could use this to ask the user to input
         neceesary information. This function is passed three parameters and should return the
@@ -167,7 +167,7 @@ class ProgramConfig(object):
         self._callbacks[key] = callback
     
     def add_required_with_default(self, key, default, help=None, type=str,
-                                  persistent=True):
+                                  persistent=False):
         """Add a required key with a default value.
         
         :param key: the key to add
