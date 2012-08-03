@@ -4,27 +4,30 @@ from argparse import Namespace
 from ludibrio import Mock
 import pytest
 
+
 def pytest_funcarg__test_config(request):
     return [{'key': 'verbosity',
              'value': 3,
              'type': int,
              'help': 'how much output to print',
              'persistent': True},
-             {'key': 'name',
-              'value': 'sean',
-              'type': str,
-              'help': 'your name',
-              'persistent': False}]
+            {'key': 'name',
+             'value': 'sean',
+             'type': str,
+             'help': 'your name',
+             'persistent': False}]
+
 
 def pytest_funcarg__test_config_default_persistence(request):
     return [{'key': 'default-persistence-test',
              'value': 'meaningless',
              'type': str,
              'help': 'help one'},
-             {'key': 'default-persistence-test-two',
-              'value': 'no meaning',
-              'type': str,
-              'help': 'help two'}]
+            {'key': 'default-persistence-test-two',
+             'value': 'no meaning',
+             'type': str,
+             'help': 'help two'}]
+
 
 class TestProgramConfig:
     def setup_method(self, method):
@@ -33,87 +36,8 @@ class TestProgramConfig:
         self.program_config = ProgramConfig(arg_parser=self.mock_arg_parser,
                                             qsettings=self.mock_qsettings)
 
-    def key_from_argparse(self, key):
-        return key.replace('-', '_')
-
-    def key_to_argparse(self, key):
-        return key.replace('_', '-')
-
-    def add_argument(self, item):
-        with self.mock_arg_parser as mock_arg_parser:
-                mock_arg_parser.add_argument('--' + self.key_to_argparse(item['key']),
-                                             metavar=item['key'].upper(),
-                                             help=item['help'],
-                                             type=item['type']) >> None
-
-    def require_no_fallback(self, config):
-        for item in config:
-            self.add_argument(item)
-            self.program_config.add_required(item['key'],
-                                        help=item['help'],
-                                        type=item['type'],
-                persistent=item['persistent'])
-
-
-    def require_default(self, config):
-        for item in config:
-            self.add_argument(item)
-            self.program_config.add_required_with_default(item['key'],
-                                                       item['value'],
-                                                       help=item['help'],
-                                                       type=item['type'],
-                                                       persistent=item['persistent'])
-
-    def validate_no_command_line_no_persistence(self, config):
-        namespace_dict = {}
-        with self.mock_qsettings as mock_qsettings:
-            for item in config:
-                mock_qsettings.contains(item['key']) >> False
-                namespace_dict[self.key_from_argparse(item['key'])] = None
-            mock_qsettings.sync() >> None
-
-        namespace = Namespace(**namespace_dict)
-        with self.mock_arg_parser as mock_arg_parser:
-            mock_arg_parser.parse_args([]) >> namespace
-        return self.program_config.validate([])
-
-    def validate_command_line_persistence(self, config):
-        namespace_dict = {}
-        args = []
-        with self.mock_qsettings as mock_qsettings:
-            for item in config:
-                namespace_dict[self.key_from_argparse(item['key'])] = item['value']
-                args.append('--' + item['key'])
-                args.append(str(item['value']))
-                if item['persistent']:
-                    mock_qsettings.setValue(item['key'], item['value']) >> None
-            mock_qsettings.sync() >> None
-
-        namespace = Namespace(**namespace_dict)
-        with self.mock_arg_parser as mock_arg_parser:
-            mock_arg_parser.parse_args(args) >> namespace
-        return self.program_config.validate(args)
-
-    def validate_command_line_no_persistence(self, config):
-        namespace_dict = {}
-        args = []
-        with self.mock_qsettings as mock_qsettings:
-            for item in config:
-                namespace_dict[self.key_from_argparse(item['key'])] = item['value']
-                args.append('--' + item['key'])
-                args.append(str(item['value']))
-            mock_qsettings.sync() >> None
-
-        namespace = Namespace(**namespace_dict)
-        with self.mock_arg_parser as mock_arg_parser:
-            mock_arg_parser.parse_args(args) >> namespace
-        return self.program_config.validate(args)
-
-    def assert_config_available(self, test, real):
-        for item in test:
-            assert item['value'] == real[item['key']]
-
-    def test_required_configuration_specified_on_command_line(self, test_config):
+    def test_required_configuration_specified_on_command_line(self,
+                                                              test_config):
         self.require_no_fallback(test_config)
         real_config = self.validate_command_line_persistence(test_config)
         self.assert_config_available(test_config, real_config)
@@ -153,16 +77,18 @@ class TestProgramConfig:
                 'type': int,
                 'persistent': False}
         self.add_argument(item)
+
         def callback(key, help, type):
             assert item['key'] == key
             assert item['help'] == help
             assert item['type'] == type
             return item['value']
-        self.program_config.add_required_with_callback(item['key'],
-                                                       callback,
-                                                       help=item['help'],
-                                                       type=item['type'],
-            persistent=item['persistent'])
+        self.program_config.\
+            add_required_with_callback(item['key'],
+                                       callback,
+                                       help=item['help'],
+                                       type=item['type'],
+                                       persistent=item['persistent'])
 
         test_config = [item]
 
@@ -185,15 +111,16 @@ class TestProgramConfig:
             mock_arg_parser.parse_args([]) >> namespace
         with pytest.raises(RequiredKeyError) as e:
             self.program_config.validate([])
-        assert str(e).endswith('Required key not provided: {0}'.format(test_config[0]['key']))
+        assert str(e).endswith('Required key not provided: {0}'.
+                               format(test_config[0]['key']))
 
     def test_optional_configuration(self, test_config):
         for item in test_config:
             self.add_argument(item)
             self.program_config.add_optional(item['key'],
-                                        help=item['help'],
-                                        type=item['type'],
-                persistent=item['persistent'])
+                                             help=item['help'],
+                                             type=item['type'],
+                                             persistent=item['persistent'])
         real_config = self.validate_no_command_line_no_persistence(test_config)
         assert real_config == {}
 
@@ -203,14 +130,16 @@ class TestProgramConfig:
         for item in test_config:
             with pytest.raises(DuplicateKeyError) as e:
                 self.program_config.add_required(item['key'])
-            assert str(e).endswith('Attempt to define duplicate key: {0}'.format(item['key']))
+            assert str(e).endswith('Attempt to define duplicate key: {0}'.
+                                   format(item['key']))
 
     def test_default_configuration_never_persisted(self, test_config):
         self.require_default(test_config)
         real_config = self.validate_no_command_line_no_persistence(test_config)
         self.assert_config_available(test_config, real_config)
 
-    def test_default_configuration_on_command_line_never_persisted(self, test_config):
+    def test_default_configuration_on_command_line_never_persisted(
+            self, test_config):
         self.require_default(test_config)
 
         namespace_dict = {}
@@ -230,50 +159,56 @@ class TestProgramConfig:
         self.assert_config_available(test_config, real_config)
 
     def test_handles_hyphens_properly(self):
-        # argparse converts hyphens to underscores in the Namespace object since
-        # hyphens are not valid characters in Python identifiers
+        # argparse converts hyphens to underscores in the Namespace object
+        # since hyphens are not valid characters in Python identifiers
         # PySide Program Config should always use hyphens in its command-line
         # xargument names
         # however, this should be transparent to the user
         test_config = [{'key': 'key-with-hyphens',
-             'value': 10,
-             'type': int,
-             'help': 'just a test',
-             'persistent': False}]
+                        'value': 10,
+                        'type': int,
+                        'help': 'just a test',
+                        'persistent': False}]
         self.require_no_fallback(test_config)
         real_config = self.validate_command_line_persistence(test_config)
         self.assert_config_available(test_config, real_config)
-        
+
     def test_handles_underscores_properly(self):
         # PySide Program Config should always use hyphens in its command-line
         # argument names
         # however, this should be transparent to the user
         test_config = [{'key': 'key_with_underscores',
-             'value': 10,
-             'type': int,
-             'help': 'just a test',
-             'persistent': False}]
+                        'value': 10,
+                        'type': int,
+                        'help': 'just a test',
+                        'persistent': False}]
         self.require_no_fallback(test_config)
         real_config = self.validate_command_line_persistence(test_config)
-        self.assert_config_available(test_config, real_config)        
-        
-    def test_default_persistence_is_not_persistent_no_fallback(self, test_config_default_persistence):
+        self.assert_config_available(test_config, real_config)
+
+    def test_default_persistence_is_not_persistent_no_fallback(
+            self, test_config_default_persistence):
         for item in test_config_default_persistence:
             self.add_argument(item)
             self.program_config.add_required(item['key'],
                                              help=item['help'],
-                type=item['type'])
-        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
-        self.assert_config_available(test_config_default_persistence, real_config)
+                                             type=item['type'])
+        real_config = self.validate_command_line_no_persistence(
+            test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence,
+                                     real_config)
 
-    def test_default_persistence_is_not_persistent_optional(self, test_config_default_persistence):
+    def test_default_persistence_is_not_persistent_optional(
+            self, test_config_default_persistence):
         for item in test_config_default_persistence:
             self.add_argument(item)
             self.program_config.add_optional(item['key'],
                                              help=item['help'],
-                type=item['type'])
-        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
-        self.assert_config_available(test_config_default_persistence, real_config)
+                                             type=item['type'])
+        real_config = self.validate_command_line_no_persistence(
+            test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence,
+                                     real_config)
 
     def test_default_persistence_is_not_persistent_callback(self):
         # IMPORTANT:
@@ -283,6 +218,7 @@ class TestProgramConfig:
                 'help': 'how much output to print',
                 'type': int}
         self.add_argument(item)
+
         def callback(key, help, type):
             assert item['key'] == key
             assert item['help'] == help
@@ -293,15 +229,103 @@ class TestProgramConfig:
                                                        help=item['help'],
                                                        type=item['type'])
         test_config_default_persistence = [item]
-        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
-        self.assert_config_available(test_config_default_persistence, real_config)
+        real_config = self.validate_command_line_no_persistence(
+            test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence,
+                                     real_config)
 
-    def test_default_persistence_is_not_persistent_default(self, test_config_default_persistence):
+    def test_default_persistence_is_not_persistent_default(
+            self, test_config_default_persistence):
         for item in test_config_default_persistence:
             self.add_argument(item)
             self.program_config.add_required_with_default(item['key'],
                                                           item['value'],
                                                           help=item['help'],
-                type=item['type'])
-        real_config = self.validate_command_line_no_persistence(test_config_default_persistence)
-        self.assert_config_available(test_config_default_persistence, real_config)
+                                                          type=item['type'])
+        real_config = self.validate_command_line_no_persistence(
+            test_config_default_persistence)
+        self.assert_config_available(test_config_default_persistence,
+                                     real_config)
+
+    def key_from_argparse(self, key):
+        return key.replace('-', '_')
+
+    def key_to_argparse(self, key):
+        return key.replace('_', '-')
+
+    def add_argument(self, item):
+        with self.mock_arg_parser as mock_arg_parser:
+                mock_arg_parser.add_argument('--' +
+                                             self.key_to_argparse(item['key']),
+                                             metavar=item['key'].upper(),
+                                             help=item['help'],
+                                             type=item['type']) >> None
+
+    def require_no_fallback(self, config):
+        for item in config:
+            self.add_argument(item)
+            self.program_config.add_required(item['key'],
+                                             help=item['help'],
+                                             type=item['type'],
+                                             persistent=item['persistent'])
+
+    def require_default(self, config):
+        for item in config:
+            self.add_argument(item)
+            self.program_config.\
+                add_required_with_default(item['key'],
+                                          item['value'],
+                                          help=item['help'],
+                                          type=item['type'],
+                                          persistent=item['persistent'])
+
+    def validate_no_command_line_no_persistence(self, config):
+        namespace_dict = {}
+        with self.mock_qsettings as mock_qsettings:
+            for item in config:
+                mock_qsettings.contains(item['key']) >> False
+                namespace_dict[self.key_from_argparse(item['key'])] = None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args([]) >> namespace
+        return self.program_config.validate([])
+
+    def validate_command_line_persistence(self, config):
+        namespace_dict = {}
+        args = []
+        with self.mock_qsettings as mock_qsettings:
+            for item in config:
+                namespace_dict[self.key_from_argparse(item['key'])] = \
+                    item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
+                if item['persistent']:
+                    mock_qsettings.setValue(item['key'], item['value']) >> None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args(args) >> namespace
+        return self.program_config.validate(args)
+
+    def validate_command_line_no_persistence(self, config):
+        namespace_dict = {}
+        args = []
+        with self.mock_qsettings as mock_qsettings:
+            for item in config:
+                namespace_dict[self.key_from_argparse(item['key'])] = \
+                    item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args(args) >> namespace
+        return self.program_config.validate(args)
+
+    def assert_config_available(self, test, real):
+        for item in test:
+            assert item['value'] == real[item['key']]

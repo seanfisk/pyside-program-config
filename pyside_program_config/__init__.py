@@ -1,4 +1,5 @@
-""":mod:`pyside_program_config` -- Command-line argument parsing combined with the power of QSettings. 
+""":mod:`pyside_program_config` --
+Command-line argument parsing combined with the power of QSettings.
 """
 
 import metadata

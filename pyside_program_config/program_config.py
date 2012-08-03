@@ -3,20 +3,25 @@
 
 from collections import OrderedDict
 
+
 class RequiredKeyError(Exception):
     """Error raised when a key specified as required is not given."""
     def __init__(self, key):
         self.key = key
+
     def __str__(self):
         return 'Required key not provided: {0}'.format(self.key)
+
 
 class DuplicateKeyError(Exception):
     """Error raised when an attempt is made to add a key multiple times."""
     def __init__(self, key):
         self.key = key
+
     def __str__(self):
         return 'Attempt to define duplicate key: {0}'.format(self.key)
-    
+
+
 class KeyInfo(object):
     """Key configuration item storage object.
     """
@@ -26,13 +31,14 @@ class KeyInfo(object):
         self.help = help
         self.persistent = persistent
 
+
 class ProgramConfig(object):
     """Main program configuration object. Manages and stores all
     configurations."""
     def __init__(self, arg_parser=None, qsettings=None):
         # this is not the best technique, but it allows ease of use without
         # creating explicit dependencies on ArgumentParser and QSettings,
-        # and makes this module more easily testable 
+        # and makes this module more easily testable
         if arg_parser is None:
             # following two lines reported as not covered... that's OK
             from argparse import ArgumentParser
@@ -41,7 +47,7 @@ class ProgramConfig(object):
             # following two lines reported as not covered... that's OK
             from PySide.QtCore import QSettings
             qsettings = QSettings()
-            
+
         self._arg_parser = arg_parser
         self._qsettings = qsettings
         # make this ordered so they are validated in order of insertion
@@ -71,10 +77,10 @@ class ProgramConfig(object):
         :rtype: :class:`str`
         """
         return key.replace('_', '-')
-    
+
     def _add_key(self, key, required, help, type, persistent):
         """Utility method to add a key to the key storage variable.
-        
+
         :param key: the key to add
         :type key: :class:`str`
         :param required: whether the key is required
@@ -85,7 +91,8 @@ class ProgramConfig(object):
         :type type: :class:`type`
         :param persistent: whether the key should persist between runs
         :type persistent: :class:`bool`
-        :raises: :exc:`DuplicateKeyError` -- when the key has already been added
+        :raises: :exc:`DuplicateKeyError` -- when the key has already been
+        added
         """
         if key in self._key_info:
             raise DuplicateKeyError(key)
@@ -94,11 +101,11 @@ class ProgramConfig(object):
                                       metavar=key.upper(),
                                       help=help,
                                       type=type)
-    
+
     def add_required(self, key, help=None, type=str, persistent=False):
-        """Add a required configuration item. Since no fallback is provided, the
-        configuration will fail to validate if no key is provided.
-        
+        """Add a required configuration item. Since no fallback is provided,
+        the configuration will fail to validate if no key is provided.
+
         :param key: the key to add
         :type key: :class:`str`
         :param help: description of the purpose of the key
@@ -107,13 +114,14 @@ class ProgramConfig(object):
         :type type: :class:`type`
         :param persistent: whether the key should persist between runs
         :type persistent: :class:`bool`
-        :raises: :exc:`DuplicateKeyError` -- when the key has already been added
+        :raises: :exc:`DuplicateKeyError` -- when the key has already been \
+        added
         """
         self._add_key(key, True, help, type, persistent)
-        
+
     def add_optional(self, key, help=None, type=str, persistent=False):
         """Add an optional configuration item.
-        
+
         :param key: the key to add
         :type key: :class:`str`
         :param help: description of the purpose of the key
@@ -122,17 +130,19 @@ class ProgramConfig(object):
         :type type: :class:`type`
         :param persistent: whether the key should persist between runs
         :type persistent: :class:`bool`
-        :raises: :exc:`DuplicateKeyError` -- when the key has already been added
+        :raises: :exc:`DuplicateKeyError` -- when the key has already been \
+        added
         """
         self._add_key(key, False, help, type, persistent)
-    
+
     def add_required_with_callback(self, key, callback, help=None, type=str,
                                    persistent=False):
         """Add a required configuration item which calls the specified callback
         function. For example, one could use this to ask the user to input
-        neceesary information. This function is passed three parameters and should return the
-        desired value. The return value is not cast, so it must be cast to the
-        proper type if that is what is desired. Here is an example:
+        neceesary information. This function is passed three parameters and
+        should return the desired value. The return value is not cast, so it
+        must be cast to the proper type if that is what is desired. Here is an
+        example:
 
         .. code-block:: python
 
@@ -146,15 +156,19 @@ class ProgramConfig(object):
            Callback function when a required key is not provided. Must return
            the desired value of the key.
 
-           :param key: the original key passed into :meth:`add_required_with_callback`
+           :param key: the original key passed into \
+           :meth:`add_required_with_callback`
            :type key: :class:`str`
-           :param help: the original help text passed into :meth:`add_required_with_callback`
+           :param help: the original help text passed into \
+           :meth:`add_required_with_callback`
            :type help: :class:`str`
-           :param type: the original type passed into :meth:`add_required_with_callback`
+           :param type: the original type passed into \
+           :meth:`add_required_with_callback`
            :type type: :class:`type`
            :returns: the desired value for the key
-           :rtype: the original type passed into :meth:`add_required_with_callback`
-        
+           :rtype: the original type passed into \
+           :meth:`add_required_with_callback`
+
         :param key: the key to add
         :type key: :class:`str`
         :param help: description of the purpose of the key
@@ -163,15 +177,16 @@ class ProgramConfig(object):
         :type type: :class:`type`
         :param persistent: whether the key should persist between runs
         :type persistent: :class:`bool`
-        :raises: :exc:`DuplicateKeyError` -- when the key has already been added
+        :raises: :exc:`DuplicateKeyError` -- when the key has already been \
+        added
         """
         self.add_required(key, help, type, persistent)
         self._callbacks[key] = callback
-    
+
     def add_required_with_default(self, key, default, help=None, type=str,
                                   persistent=False):
         """Add a required key with a default value.
-        
+
         :param key: the key to add
         :type key: :class:`str`
         :param default: the key's default
@@ -182,23 +197,25 @@ class ProgramConfig(object):
         :type type: :class:`type`
         :param persistent: whether the key should persist between runs
         :type persistent: :class:`bool`
-        :raises: :exc:`DuplicateKeyError` -- when the key has already been added
+        :raises: :exc:`DuplicateKeyError` -- when the key has already been \
+        added
         """
         self.add_required(key, help, type, persistent)
         self._defaults[key] = default
-        
+
     def validate(self, args=[]):
         """Validate the given configurations. When successful, the specified
-        configurations are persisted and the entire configuration is returned as
-        an :class:`OrderedDict`, ordered based upon when it is entered. Any
+        configurations are persisted and the entire configuration is returned
+        as an :class:`OrderedDict`, ordered based upon when it is entered. Any
         required keys with no fallback that are not preset will raise a
         :exc:`RequiredKeyError`. Any keys required with a callback that are not
-        present will cause the callback be called to obtain the value.  Any keys
-        required with a default that are not present will assume the
+        present will cause the callback be called to obtain the value.  Any
+        keys required with a default that are not present will assume the
         default. Any optional keys that are not preset will not be present in
         the returned configuration.
 
-        :param args: Command-line arguments to be parsed. Unlike :mod:`argparse`, this does not default to :data:`sys.argv`.
+        :param args: Command-line arguments to be parsed. Unlike \
+        :mod:`argparse`, this does not default to :data:`sys.argv`.
         :type args: :class:`list` of :class:`str`
         :returns: the parsed configuration
         :rtype: :class:`OrderedDict`
@@ -211,7 +228,7 @@ class ProgramConfig(object):
             # order of precedence is:
             #   command-line args, stored settings, default, callback
             # only one of a callback OR a default should be defined for a key
-            
+
             # the value of the option will be None if not passed on the
             # command-line
             parsed_value = parsed_args[self._key_from_argparse(key)]
@@ -236,7 +253,7 @@ class ProgramConfig(object):
                             # test_optional_configuration test
                             continue
             config[key] = value
-            
+
         # once all are verified, commit all to QSettings
         for key, value in config.iteritems():
             value_equal_to_default = False
@@ -247,8 +264,8 @@ class ProgramConfig(object):
                 pass
             if self._key_info[key].persistent and not value_equal_to_default:
                 self._qsettings.setValue(key, value)
-            
+
         # ensure settings are written
         self._qsettings.sync()
-        
+
         return config
