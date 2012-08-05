@@ -270,4 +270,8 @@ class ProgramConfig(object):
         # ensure settings are written
         self._qsettings.sync()
 
+        # add extra arguments from argparse
+        for key in frozenset(parsed_args).difference(self._key_info):
+            config[key] = parsed_args[key]
+
         return config

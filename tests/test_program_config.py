@@ -252,13 +252,10 @@ class TestProgramConfig:
         self.require_no_fallback(test_config)
         
         namespace_dict = {}
-        args = []
         with self.mock_qsettings as mock_qsettings:
             for item in test_config:
                 namespace_dict[self.key_from_argparse(item['key'])] = \
                     item['value']
-                args.append('--' + item['key'])
-                args.append(str(item['value']))
                 if item['persistent']:
                     mock_qsettings.setValue(item['key'], item['value']) >> None
             mock_qsettings.sync() >> None
@@ -269,6 +266,31 @@ class TestProgramConfig:
         real_config = self.program_config.validate()
         
         self.assert_config_available(test_config, real_config)
+
+    def test_validate_does_not_discard_other_argparse_arguments(self,
+                                                                test_config):
+        ppc_key = test_config[0]
+        argparse_key = test_config[1]
+        self.require_no_fallback([ppc_key])
+        namespace_dict = {}
+        args = []
+        with self.mock_qsettings as mock_qsettings:
+            for item in [ppc_key, argparse_key]:
+                namespace_dict[self.key_from_argparse(item['key'])] = \
+                    item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
+            if ppc_key['persistent']:
+                mock_qsettings.setValue(ppc_key['key'], ppc_key['value']) >> None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args(args) >> namespace
+        real_config = self.program_config.validate(args)
+
+        self.assert_config_available([ppc_key, argparse_key], real_config)
+
 
     def key_from_argparse(self, key):
         return key.replace('-', '_')
