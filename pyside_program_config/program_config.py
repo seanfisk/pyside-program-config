@@ -203,7 +203,7 @@ class ProgramConfig(object):
         self.add_required(key, help, type, persistent)
         self._defaults[key] = default
 
-    def validate(self, args=[]):
+    def validate(self, args=None):
         """Validate the given configurations. When successful, the specified
         configurations are persisted and the entire configuration is returned
         as an :class:`OrderedDict`, ordered based upon when it is entered. Any
@@ -214,8 +214,10 @@ class ProgramConfig(object):
         default. Any optional keys that are not preset will not be present in
         the returned configuration.
 
-        :param args: Command-line arguments to be parsed. Unlike \
-        :mod:`argparse`, this does not default to :data:`sys.argv`.
+        :param args: Command-line arguments to be parsed. If this argument is \
+        not given, it defaults to :const:`None` and is passed directly to \
+        :meth:`argparse.parse_args()`, which then takes arguments directly \
+        from :data:`sys.argv`.
         :type args: :class:`list` of :class:`str`
         :returns: the parsed configuration
         :rtype: :class:`OrderedDict`

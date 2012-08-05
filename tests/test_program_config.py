@@ -45,6 +45,7 @@ class TestProgramConfig:
     def test_required_configuration_previously_saved(self, test_config):
         self.require_no_fallback(test_config)
 
+        # validate no command line persistence
         namespace_dict = {}
         with self.mock_qsettings as mock_qsettings:
             for item in test_config:
@@ -246,6 +247,28 @@ class TestProgramConfig:
             test_config_default_persistence)
         self.assert_config_available(test_config_default_persistence,
                                      real_config)
+
+    def test_default_argument_list_to_validate_is_sys_argv(self, test_config):
+        self.require_no_fallback(test_config)
+        
+        namespace_dict = {}
+        args = []
+        with self.mock_qsettings as mock_qsettings:
+            for item in test_config:
+                namespace_dict[self.key_from_argparse(item['key'])] = \
+                    item['value']
+                args.append('--' + item['key'])
+                args.append(str(item['value']))
+                if item['persistent']:
+                    mock_qsettings.setValue(item['key'], item['value']) >> None
+            mock_qsettings.sync() >> None
+
+        namespace = Namespace(**namespace_dict)
+        with self.mock_arg_parser as mock_arg_parser:
+            mock_arg_parser.parse_args(None) >> namespace
+        real_config = self.program_config.validate()
+        
+        self.assert_config_available(test_config, real_config)
 
     def key_from_argparse(self, key):
         return key.replace('-', '_')
